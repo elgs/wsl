@@ -43,8 +43,14 @@ func main() {
 		urlQuery, err := url.ParseQuery(r.URL.RawQuery)
 		if err != nil {
 			log.Println(err)
+			return
 		}
-		fmt.Println(urlPath, len(urlPath))
+		if len(urlPath) <= 3 {
+			return
+		}
+		qId := urlPath[1]
+		qKey := urlPath[2]
+		fmt.Println(qId, qKey)
 		fmt.Println(urlQuery, len(urlQuery))
 	})
 
