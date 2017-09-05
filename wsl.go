@@ -40,18 +40,18 @@ func main() {
 		w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
 
 		urlPath := strings.Split(r.URL.Path, "/")
-		urlQuery, err := url.ParseQuery(r.URL.RawQuery)
+		qParams, err := url.ParseQuery(r.URL.RawQuery)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		if len(urlPath) <= 3 {
+		if len(urlPath) < 3 {
 			return
 		}
-		qId := urlPath[1]
+		qID := urlPath[1]
 		qKey := urlPath[2]
-		fmt.Println(qId, qKey)
-		fmt.Println(urlQuery, len(urlQuery))
+		fmt.Println(qID, qKey)
+		fmt.Println(qParams, len(qParams))
 	})
 
 	srv := &http.Server{
