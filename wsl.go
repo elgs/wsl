@@ -1,4 +1,4 @@
-package main
+package wsl
 
 import (
 	"flag"
@@ -15,7 +15,7 @@ import (
 
 var addr = flag.String("addr", ":8080", "http service address, default to :8080")
 
-func main() {
+func start(config *Config) {
 	sigs := make(chan os.Signal, 1)
 	done := make(chan bool, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
