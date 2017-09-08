@@ -55,23 +55,23 @@ func start(config *Config) {
 	})
 
 	srv := &http.Server{
-		Addr:         fmt.Sprint(config.HttpHost, ":", config.HttpPort),
+		Addr:         config.HttpAddr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
 	go func() {
 		log.Fatal(srv.ListenAndServe())
-		fmt.Println(fmt.Sprint("Listening on http://", config.HttpHost, ":", config.HttpPort, "/"))
+		fmt.Println(fmt.Sprint("Listening on http://", config.HttpAddr, "/"))
 	}()
 
 	srvs := &http.Server{
-		Addr:         fmt.Sprint(config.HttpsHost, ":", config.HttpsPort),
+		Addr:         config.HttpsAddr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
 	go func() {
 		log.Fatal(srvs.ListenAndServeTLS(config.CertFile, config.KeyFile))
-		fmt.Println(fmt.Sprint("Listening on https://", config.HttpsHost, ":", config.HttpsPort, "/"))
+		fmt.Println(fmt.Sprint("Listening on https://", config.HttpsAddr, "/"))
 	}()
 
 	<-done

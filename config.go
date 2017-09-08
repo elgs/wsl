@@ -4,13 +4,12 @@ import "github.com/elgs/gojq"
 
 // Config structure
 type Config struct {
-	HttpPort  int
-	HttpHost  string
-	HttpsPort int
-	HttpsHost string
+	HttpAddr  string
+	HttpsAddr string
 	CertFile  string
 	KeyFile   string
 	ConfFile  string
+	DbUrl     string
 }
 
 func (this *Config) LoadConfig(file string) error {
@@ -19,17 +18,13 @@ func (this *Config) LoadConfig(file string) error {
 		//ignore
 		return err
 	}
-	v0, err := jqConf.QueryToInt64("http_port")
+	v1, err := jqConf.QueryToString("http_addr")
 	if err == nil {
-		this.HttpPort = int(v0)
+		this.HttpAddr = v1
 	}
-	v1, err := jqConf.QueryToInt64("https_port")
+	v2, err := jqConf.QueryToString("https_addr")
 	if err == nil {
-		this.HttpsPort = int(v1)
-	}
-	v2, err := jqConf.QueryToString("https_host")
-	if err == nil {
-		this.HttpsHost = v2
+		this.HttpsAddr = v2
 	}
 	v3, err := jqConf.QueryToString("cert_file")
 	if err == nil {
@@ -42,6 +37,10 @@ func (this *Config) LoadConfig(file string) error {
 	v5, err := jqConf.QueryToString("conf_file")
 	if err == nil {
 		this.ConfFile = v5
+	}
+	v6, err := jqConf.QueryToString("db_url")
+	if err == nil {
+		this.DbUrl = v6
 	}
 	return nil
 }
