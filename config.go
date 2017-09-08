@@ -5,7 +5,7 @@ import "github.com/elgs/gojq"
 // Config structure
 type Config struct {
 	HttpPort  int
-	HttpHost  string // "127.0.0.1"
+	HttpHost  string
 	HttpsPort int
 	HttpsHost string
 	CertFile  string

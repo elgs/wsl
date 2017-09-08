@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var addr = flag.String("addr", ":8080", "http service address, default to :8080")
+// var addr = flag.String("addr", ":8080", "http service address, default to :8080")
 
 func start(config *Config) {
 	sigs := make(chan os.Signal, 1)
@@ -55,13 +55,23 @@ func start(config *Config) {
 	})
 
 	srv := &http.Server{
-		Addr:         *addr,
+		Addr:         fmt.Sprint(config.HttpHost, ":", config.HttpPort),
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
 	go func() {
 		log.Fatal(srv.ListenAndServe())
-		log.Println("started!")
+		fmt.Println(fmt.Sprint("Listening on http://", config.HttpHost, ":", config.HttpPort, "/"))
+	}()
+
+	srvs := &http.Server{
+		Addr:         fmt.Sprint(config.HttpsHost, ":", config.HttpsPort),
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	}
+	go func() {
+		log.Fatal(srvs.ListenAndServeTLS(config.CertFile, config.KeyFile))
+		fmt.Println(fmt.Sprint("Listening on https://", config.HttpsHost, ":", config.HttpsPort, "/"))
 	}()
 
 	<-done
