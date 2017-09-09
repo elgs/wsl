@@ -1,7 +1,6 @@
 package wsl
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,6 +13,7 @@ import (
 )
 
 // var addr = flag.String("addr", ":8080", "http service address, default to :8080")
+// flag.Parse()
 
 func start(config *Config) {
 	sigs := make(chan os.Signal, 1)
@@ -30,8 +30,6 @@ func start(config *Config) {
 			}
 		}
 	}()
-
-	flag.Parse()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))

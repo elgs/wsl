@@ -20,8 +20,8 @@ func (this *Config) httpsEnabled() bool {
 	return len(this.HttpsAddr) > 0 && len(this.CertFile) > 0 && len(this.KeyFile) > 0
 }
 
-func (this *Config) LoadConfig(file string) error {
-	jqConf, err := gojq.NewFileQuery(file)
+func (this *Config) LoadConfig() error {
+	jqConf, err := gojq.NewFileQuery(this.ConfFile)
 	if err != nil {
 		//ignore
 		return err
