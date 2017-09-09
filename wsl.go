@@ -15,7 +15,7 @@ import (
 // var addr = flag.String("addr", ":8080", "http service address, default to :8080")
 // flag.Parse()
 
-func start(config *Config) {
+func Hook() {
 	sigs := make(chan os.Signal, 1)
 	done := make(chan bool, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -30,6 +30,16 @@ func start(config *Config) {
 			}
 		}
 	}()
+
+	<-done
+	fmt.Println("Bye!")
+}
+
+type WSL struct {
+	config *Config
+}
+
+func (this *WSL) Start() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
@@ -52,30 +62,27 @@ func start(config *Config) {
 		fmt.Println(qParams, len(qParams))
 	})
 
-	if config.httpEnabled() {
+	if this.config.httpEnabled() {
 		srv := &http.Server{
-			Addr:         config.HttpAddr,
+			Addr:         this.config.HttpAddr,
 			WriteTimeout: 15 * time.Second,
 			ReadTimeout:  15 * time.Second,
 		}
 		go func() {
 			log.Fatal(srv.ListenAndServe())
-			fmt.Println(fmt.Sprint("Listening on http://", config.HttpAddr, "/"))
+			fmt.Println(fmt.Sprint("Listening on http://", this.config.HttpAddr, "/"))
 		}()
 	}
 
-	if config.httpsEnabled() {
+	if this.config.httpsEnabled() {
 		srvs := &http.Server{
-			Addr:         config.HttpsAddr,
+			Addr:         this.config.HttpsAddr,
 			WriteTimeout: 15 * time.Second,
 			ReadTimeout:  15 * time.Second,
 		}
 		go func() {
-			log.Fatal(srvs.ListenAndServeTLS(config.CertFile, config.KeyFile))
-			fmt.Println(fmt.Sprint("Listening on https://", config.HttpsAddr, "/"))
+			log.Fatal(srvs.ListenAndServeTLS(this.config.CertFile, this.config.KeyFile))
+			fmt.Println(fmt.Sprint("Listening on https://", this.config.HttpsAddr, "/"))
 		}()
 	}
-
-	<-done
-	fmt.Println("Bye!")
 }
