@@ -9,6 +9,7 @@ type Config struct {
 	CertFile  string
 	KeyFile   string
 	ConfFile  string
+	DbType    string
 	DbUrl     string
 }
 
@@ -56,9 +57,15 @@ func (this *Config) LoadConfig() error {
 	} else {
 		return err
 	}
-	v6, err := jqConf.QueryToString("db_url")
+	v6, err := jqConf.QueryToString("db_type")
 	if err == nil {
-		this.DbUrl = v6
+		this.DbType = v6
+	} else {
+		return err
+	}
+	v7, err := jqConf.QueryToString("db_url")
+	if err == nil {
+		this.DbUrl = v7
 	} else {
 		return err
 	}

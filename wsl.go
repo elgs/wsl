@@ -1,6 +1,7 @@
 package wsl
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,10 +15,21 @@ import (
 
 type WSL struct {
 	config *Config
+	db     *sql.DB
+}
+
+func (this *WSL) ConnectToDb() error {
+	if this.db == nil {
+		db, err := sql.Open(this.config.DbType, this.config.DbUrl)
+		if err != nil {
+			return err
+		}
+		this.db = db
+	}
+	return nil
 }
 
 func (this *WSL) Start() {
-
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -30,14 +42,15 @@ func (this *WSL) Start() {
 			log.Println(err)
 			return
 		}
-		if len(urlPath) < 3 {
+		if len(urlPath) < 2 {
 			return
 		}
 		qID := urlPath[1]
-		qKey := urlPath[2]
-		fmt.Println(qID, qKey)
+		fmt.Println(qID)
 		fmt.Println(qParams, len(qParams))
 	})
+
+	this.ConnectToDb()
 
 	if this.config.httpEnabled() {
 		srv := &http.Server{

@@ -28,12 +28,26 @@ func Hook() {
 	fmt.Println("Bye!")
 }
 
-func extractParamsFromMap(map[string]string) []interface{} {
-	return []interface{}{}
+func extractParamsFromMap(m map[string]string) []interface{} {
+	ret := []interface{}{}
+	for i := 0; ; i++ {
+		if val, ok := m[fmt.Sprint("_", i)]; ok {
+			ret = append(ret, val)
+		} else {
+			break
+		}
+	}
+	return ret
 }
 
-func extractScriptParamsFromMap(map[string]string) map[string]string {
-	return map[string]string{}
+func extractScriptParamsFromMap(m map[string]string) map[string]string {
+	ret := map[string]string{}
+	for k, v := range m {
+		if strings.HasPrefix(k, "__") {
+			ret[k] = v
+		}
+	}
+	return ret
 }
 
 func sqlNormalize(sql *string) {

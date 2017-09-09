@@ -10,17 +10,15 @@ import (
 	"github.com/elgs/gosqljson"
 )
 
-func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, params map[string]string) ([]interface{}, error) {
+func (this *WSL) Exec(db *sql.DB, script string, params map[string]string) ([]interface{}, error) {
 	var ret []interface{}
 
-	innerTrans := false
-	if tx == nil {
-		var err error
-		tx, err = db.Begin()
-		innerTrans = true
-		if err != nil {
-			return nil, err
-		}
+	array := false
+	theCase := ""
+
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, err
 	}
 
 	scriptParams := extractScriptParamsFromMap(params)
@@ -30,14 +28,9 @@ func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, params map[string]s
 
 	scriptsArray, err := gosplitargs.SplitArgs(script, ";", true)
 	if err != nil {
-		if innerTrans {
-			tx.Rollback()
-		}
+		tx.Rollback()
 		return nil, err
 	}
-
-	array := false
-	theCase := ""
 
 	sqlParams := extractParamsFromMap(params)
 	totalCount := 0
@@ -48,15 +41,11 @@ func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, params map[string]s
 		}
 		count, err := gosplitargs.CountSeparators(s, "\\?")
 		if err != nil {
-			if innerTrans {
-				tx.Rollback()
-			}
+			tx.Rollback()
 			return nil, err
 		}
 		if len(sqlParams) < totalCount+count {
-			if innerTrans {
-				tx.Rollback()
-			}
+			tx.Rollback()
 			return nil, errors.New(fmt.Sprintln("Incorrect param count. Expected: ", totalCount+count, " actual: ", len(sqlParams)))
 		}
 		isQ := isQuery(s)
@@ -65,18 +54,14 @@ func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, params map[string]s
 				header, data, err := gosqljson.QueryTxToArray(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
 				data = append([][]string{header}, data...)
 				if err != nil {
-					if innerTrans {
-						tx.Rollback()
-					}
+					tx.Rollback()
 					return nil, err
 				}
 				ret = append(ret, data)
 			} else {
 				data, err := gosqljson.QueryTxToMap(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
 				if err != nil {
-					if innerTrans {
-						tx.Rollback()
-					}
+					tx.Rollback()
 					return nil, err
 				}
 				ret = append(ret, data)
@@ -84,9 +69,7 @@ func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, params map[string]s
 		} else {
 			rowsAffected, err := gosqljson.ExecTx(tx, s, sqlParams[totalCount:totalCount+count]...)
 			if err != nil {
-				if innerTrans {
-					tx.Rollback()
-				}
+				tx.Rollback()
 				return nil, err
 			}
 			ret = append(ret, rowsAffected)
@@ -94,8 +77,6 @@ func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, params map[string]s
 		totalCount += count
 	}
 
-	if innerTrans {
-		tx.Commit()
-	}
+	tx.Commit()
 	return ret, nil
 }
