@@ -54,25 +54,29 @@ func start(config *Config) {
 		fmt.Println(qParams, len(qParams))
 	})
 
-	srv := &http.Server{
-		Addr:         config.HttpAddr,
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+	if config.httpEnabled() {
+		srv := &http.Server{
+			Addr:         config.HttpAddr,
+			WriteTimeout: 15 * time.Second,
+			ReadTimeout:  15 * time.Second,
+		}
+		go func() {
+			log.Fatal(srv.ListenAndServe())
+			fmt.Println(fmt.Sprint("Listening on http://", config.HttpAddr, "/"))
+		}()
 	}
-	go func() {
-		log.Fatal(srv.ListenAndServe())
-		fmt.Println(fmt.Sprint("Listening on http://", config.HttpAddr, "/"))
-	}()
 
-	srvs := &http.Server{
-		Addr:         config.HttpsAddr,
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+	if config.httpsEnabled() {
+		srvs := &http.Server{
+			Addr:         config.HttpsAddr,
+			WriteTimeout: 15 * time.Second,
+			ReadTimeout:  15 * time.Second,
+		}
+		go func() {
+			log.Fatal(srvs.ListenAndServeTLS(config.CertFile, config.KeyFile))
+			fmt.Println(fmt.Sprint("Listening on https://", config.HttpsAddr, "/"))
+		}()
 	}
-	go func() {
-		log.Fatal(srvs.ListenAndServeTLS(config.CertFile, config.KeyFile))
-		fmt.Println(fmt.Sprint("Listening on https://", config.HttpsAddr, "/"))
-	}()
 
 	<-done
 	fmt.Println("Bye!")

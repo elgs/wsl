@@ -12,6 +12,14 @@ type Config struct {
 	DbUrl     string
 }
 
+func (this *Config) httpEnabled() bool {
+	return len(this.HttpAddr) > 0
+}
+
+func (this *Config) httpsEnabled() bool {
+	return len(this.HttpsAddr) > 0 && len(this.CertFile) > 0 && len(this.KeyFile) > 0
+}
+
 func (this *Config) LoadConfig(file string) error {
 	jqConf, err := gojq.NewFileQuery(file)
 	if err != nil {
