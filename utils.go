@@ -32,6 +32,10 @@ func extractParamsFromMap(map[string]string) []interface{} {
 	return []interface{}{}
 }
 
+func extractScriptParamsFromMap(map[string]string) map[string]string {
+	return map[string]string{}
+}
+
 func sqlNormalize(sql *string) {
 	*sql = strings.TrimSpace(*sql)
 	var ret string

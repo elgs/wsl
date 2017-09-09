@@ -10,7 +10,7 @@ import (
 	"github.com/elgs/gosqljson"
 )
 
-func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, scriptParams map[string]string, params map[string]string) ([]interface{}, error) {
+func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, params map[string]string) ([]interface{}, error) {
 	var ret []interface{}
 
 	innerTrans := false
@@ -23,6 +23,7 @@ func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, scriptParams map[st
 		}
 	}
 
+	scriptParams := extractScriptParamsFromMap(params)
 	for k, v := range scriptParams {
 		script = strings.Replace(script, k, v, -1)
 	}
@@ -38,7 +39,7 @@ func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, scriptParams map[st
 	array := false
 	theCase := ""
 
-	params1 := extractParamsFromMap(params)
+	sqlParams := extractParamsFromMap(params)
 	totalCount := 0
 	for _, s := range scriptsArray {
 		sqlNormalize(&s)
@@ -52,16 +53,16 @@ func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, scriptParams map[st
 			}
 			return nil, err
 		}
-		if len(params1) < totalCount+count {
+		if len(sqlParams) < totalCount+count {
 			if innerTrans {
 				tx.Rollback()
 			}
-			return nil, errors.New(fmt.Sprintln("Incorrect param count. Expected: ", totalCount+count, " actual: ", len(params1)))
+			return nil, errors.New(fmt.Sprintln("Incorrect param count. Expected: ", totalCount+count, " actual: ", len(sqlParams)))
 		}
 		isQ := isQuery(s)
 		if isQ {
 			if array {
-				header, data, err := gosqljson.QueryTxToArray(tx, theCase, s, params1[totalCount:totalCount+count]...)
+				header, data, err := gosqljson.QueryTxToArray(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
 				data = append([][]string{header}, data...)
 				if err != nil {
 					if innerTrans {
@@ -71,7 +72,7 @@ func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, scriptParams map[st
 				}
 				ret = append(ret, data)
 			} else {
-				data, err := gosqljson.QueryTxToMap(tx, theCase, s, params1[totalCount:totalCount+count]...)
+				data, err := gosqljson.QueryTxToMap(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
 				if err != nil {
 					if innerTrans {
 						tx.Rollback()
@@ -81,7 +82,7 @@ func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, scriptParams map[st
 				ret = append(ret, data)
 			}
 		} else {
-			rowsAffected, err := gosqljson.ExecTx(tx, s, params1[totalCount:totalCount+count]...)
+			rowsAffected, err := gosqljson.ExecTx(tx, s, sqlParams[totalCount:totalCount+count]...)
 			if err != nil {
 				if innerTrans {
 					tx.Rollback()
@@ -98,5 +99,3 @@ func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, scriptParams map[st
 	}
 	return ret, nil
 }
-
-
