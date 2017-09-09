@@ -5,35 +5,12 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 	"time"
 )
 
 // var addr = flag.String("addr", ":8080", "http service address, default to :8080")
 // flag.Parse()
-
-func Hook() {
-	sigs := make(chan os.Signal, 1)
-	done := make(chan bool, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		for {
-			select {
-			case sig := <-sigs:
-				fmt.Println(sig)
-				// cleanup code here
-				done <- true
-			}
-		}
-	}()
-
-	<-done
-	fmt.Println("Bye!")
-}
 
 type WSL struct {
 	config *Config

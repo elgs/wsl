@@ -10,7 +10,7 @@ import (
 	"github.com/elgs/gosqljson"
 )
 
-func exec(tx *sql.Tx, db *sql.DB, script string, scriptParams map[string]string, params map[string]string) ([]interface{}, error) {
+func (this *WSL) Exec(tx *sql.Tx, db *sql.DB, script string, scriptParams map[string]string, params map[string]string) ([]interface{}, error) {
 	var ret []interface{}
 
 	innerTrans := false
@@ -99,30 +99,4 @@ func exec(tx *sql.Tx, db *sql.DB, script string, scriptParams map[string]string,
 	return ret, nil
 }
 
-func extractParamsFromMap(map[string]string) []interface{} {
-	return []interface{}{}
-}
 
-func sqlNormalize(sql *string) {
-	*sql = strings.TrimSpace(*sql)
-	var ret string
-	lines := strings.Split(*sql, "\n")
-	for _, line := range lines {
-		lineTrimmed := strings.TrimSpace(line)
-		if lineTrimmed != "" && !strings.HasPrefix(lineTrimmed, "-- ") {
-			ret += line + "\n"
-		}
-	}
-	*sql = ret
-}
-
-func isQuery(sql string) bool {
-	sqlUpper := strings.ToUpper(strings.TrimSpace(sql))
-	if strings.HasPrefix(sqlUpper, "SELECT") ||
-		strings.HasPrefix(sqlUpper, "SHOW") ||
-		strings.HasPrefix(sqlUpper, "DESCRIBE") ||
-		strings.HasPrefix(sqlUpper, "EXPLAIN") {
-		return true
-	}
-	return false
-}
