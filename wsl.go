@@ -30,6 +30,8 @@ func (this *WSL) ConnectToDb() error {
 }
 
 func (this *WSL) Start() {
+	this.ConnectToDb()
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -48,9 +50,13 @@ func (this *WSL) Start() {
 		qID := urlPath[1]
 		fmt.Println(qID)
 		fmt.Println(qParams, len(qParams))
+		result, err := this.Exec(this.db, "script", valuesToMap(&qParams))
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		fmt.Println(result)
 	})
-
-	this.ConnectToDb()
 
 	if this.config.httpEnabled() {
 		srv := &http.Server{

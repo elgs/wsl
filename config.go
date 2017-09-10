@@ -1,16 +1,27 @@
 package wsl
 
-import "github.com/elgs/gojq"
+import (
+	"io/ioutil"
+	"log"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
+
+	"github.com/elgs/gojq"
+)
 
 // Config structure
 type Config struct {
-	HttpAddr  string
-	HttpsAddr string
-	CertFile  string
-	KeyFile   string
-	ConfFile  string
-	DbType    string
-	DbUrl     string
+	HttpAddr   string
+	HttpsAddr  string
+	CertFile   string
+	KeyFile    string
+	ConfFile   string
+	ScriptPath string
+	DbType     string
+	DbUrl      string
+	Scripts    map[string]string
 }
 
 func (this *Config) httpEnabled() bool {
@@ -30,44 +41,55 @@ func (this *Config) LoadConfig() error {
 	v1, err := jqConf.QueryToString("http_addr")
 	if err == nil {
 		this.HttpAddr = v1
-	} else {
-		return err
 	}
 	v2, err := jqConf.QueryToString("https_addr")
 	if err == nil {
 		this.HttpsAddr = v2
-	} else {
-		return err
 	}
 	v3, err := jqConf.QueryToString("cert_file")
 	if err == nil {
 		this.CertFile = v3
-	} else {
-		return err
 	}
 	v4, err := jqConf.QueryToString("key_file")
 	if err == nil {
 		this.KeyFile = v4
-	} else {
-		return err
 	}
 	v5, err := jqConf.QueryToString("conf_file")
 	if err == nil {
 		this.ConfFile = v5
-	} else {
-		return err
 	}
-	v6, err := jqConf.QueryToString("db_type")
+	v6, err := jqConf.QueryToString("script_path")
 	if err == nil {
-		this.DbType = v6
-	} else {
-		return err
+		this.ScriptPath = v6
 	}
-	v7, err := jqConf.QueryToString("db_url")
+	v7, err := jqConf.QueryToString("db_type")
 	if err == nil {
-		this.DbUrl = v7
-	} else {
-		return err
+		this.DbType = v7
 	}
+	v8, err := jqConf.QueryToString("db_url")
+	if err == nil {
+		this.DbUrl = v8
+	}
+	return nil
+}
+
+func (this *Config) LoadScripts() error {
+	if this.ScriptPath == "" {
+		this.ScriptPath = path.Dir(this.ConfFile)
+	}
+	filepath.Walk(this.ScriptPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Println(err)
+		}
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".sql") {
+			data, err := ioutil.ReadFile(path)
+			if err != nil {
+				log.Println(err)
+			}
+			scriptName := strings.TrimSuffix(strings.ToLower(info.Name()), ".sql")
+			this.Scripts[scriptName] = string(data)
+		}
+		return nil
+	})
 	return nil
 }

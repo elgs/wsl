@@ -2,6 +2,7 @@ package wsl
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"os/signal"
 	"strings"
@@ -46,6 +47,14 @@ func extractScriptParamsFromMap(m map[string]string) map[string]string {
 		if strings.HasPrefix(k, "__") {
 			ret[k] = v
 		}
+	}
+	return ret
+}
+
+func valuesToMap(values *url.Values) map[string]string {
+	ret := map[string]string{}
+	for k, v := range map[string][]string(*values) {
+		ret[k] = v[0]
 	}
 	return ret
 }
