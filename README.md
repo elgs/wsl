@@ -1,4 +1,11 @@
 # WSL - Web SQL Lite
+A web interface for executing SQL scripts.
+
+## Getting started
+### Installation
+```bash
+go get -u github.com/elgs/wsl
+```
 
 ```golang
 package main
@@ -72,3 +79,6 @@ Output as follows:
 ```json
 [[{"age":"1","name":"Charlie"}]]
 ```
+
+## Advanced
+TODO:
