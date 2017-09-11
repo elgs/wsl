@@ -115,6 +115,7 @@ will output:
 {
     "http_addr": "127.0.0.1:8080",
     "https_addr": "127.0.0.1:8443",
+    "cors": true,
     "cert_file": "/path/to/cert_file",
     "key_file": "/path/to/key_file",
     "script_path": "/path/to/script_path/",

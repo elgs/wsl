@@ -15,6 +15,7 @@ import (
 type Config struct {
 	HttpAddr   string
 	HttpsAddr  string
+	Cors       bool
 	CertFile   string
 	KeyFile    string
 	ConfFile   string
@@ -61,10 +62,16 @@ func (this *Config) LoadConfig() error {
 	v3, err := jqConf.QueryToString("cert_file")
 	if err == nil {
 		this.CertFile = v3
+	} else {
+		// default
+		this.CertFile = path.Join(path.Dir(this.ConfFile), "cert.pem")
 	}
 	v4, err := jqConf.QueryToString("key_file")
 	if err == nil {
 		this.KeyFile = v4
+	} else {
+		// default
+		this.CertFile = path.Join(path.Dir(this.ConfFile), "key.pem")
 	}
 	v5, err := jqConf.QueryToString("conf_file")
 	if err == nil {
@@ -81,6 +88,12 @@ func (this *Config) LoadConfig() error {
 	v8, err := jqConf.QueryToString("db_url")
 	if err == nil {
 		this.DbUrl = v8
+	}
+	v9, err := jqConf.QueryToBool("cors")
+	if err == nil {
+		this.Cors = v9
+	} else {
+		this.Cors = false
 	}
 	return nil
 }
