@@ -25,6 +25,19 @@ func main() {
 }
 ```
 
+### SQL Scripts
+We create a bunch of SQL scrips in the same directory as `wsld.json`, in this case `/home/pi/wsld/`.
+
+`new_pet.sql`
+```sql
+INSERT INTO pet (name, age) VALUES(?,?);
+```
+
+`list_pets.sql`
+```sql
+SELECT * FROM pet;
+```
+
 Assume we have the `pet` table in `mydb` defined as follows:
 
 ```sql
