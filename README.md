@@ -7,6 +7,7 @@ A web interface for executing SQL scripts.
 go get -u github.com/elgs/wsl
 ```
 
+### Simple Example
 ```golang
 package main
 
