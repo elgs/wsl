@@ -16,3 +16,11 @@ func main() {
 	wsl.Hook()
 }
 ```
+### wsld.json
+```json
+{
+    "http_addr":"127.0.0.1:8080",
+    "db_type":"mysql",
+    "db_url": "root:password@tcp(127.0.0.1:3306)/mydb"
+}
+```
