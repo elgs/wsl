@@ -45,17 +45,25 @@ func (this *WSL) Start() {
 			return
 		}
 		if len(urlPath) < 2 {
+			log.Println("Invalid URL.")
 			return
 		}
 		qID := urlPath[1]
 		fmt.Println(qID)
 		fmt.Println(qParams, len(qParams))
-		result, err := this.Exec(this.db, "script", valuesToMap(&qParams))
-		if err != nil {
-			log.Println(err)
+
+		if script, ok := this.config.Scripts[qID]; ok {
+			result, err := this.Exec(this.db, script, valuesToMap(&qParams))
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			fmt.Println(result)
+		} else {
+			log.Println("Invalid script.")
 			return
 		}
-		fmt.Println(result)
+
 	})
 
 	if this.config.httpEnabled() {
