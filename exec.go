@@ -13,8 +13,8 @@ import (
 func (this *WSL) exec(db *sql.DB, script string, params map[string]string) ([]interface{}, error) {
 	var ret []interface{}
 
-	array := false
-	theCase := ""
+	format := params["format"]
+	theCase := params["case"]
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -50,7 +50,7 @@ func (this *WSL) exec(db *sql.DB, script string, params map[string]string) ([]in
 		}
 		isQ := isQuery(s)
 		if isQ {
-			if array {
+			if format == "array" {
 				header, data, err := gosqljson.QueryTxToArray(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
 				data = append([][]string{header}, data...)
 				if err != nil {

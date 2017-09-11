@@ -73,7 +73,6 @@ The `curl` command above yields the following output:
 which means `1` record is affected.
 
 ### List all pets
-
 ```bash
 $ curl -s "http://127.0.0.1:8080/list_pets"
 ```
@@ -84,6 +83,32 @@ Output as follows:
 ```
 
 ## Advanced
+
+### URL Parameters
+
+#### case 
+Possible values are: "lower", "upper", "camel", any other value will default to the case of the table field name.
+
+```bash
+$ curl -s "http://127.0.0.1:8080/list_pets?case=upper"
+```
+
+will output:
+```json
+[[{"AGE":"1","NAME":"Charlie"}]]
+```
+
+#### format 
+Possible values are: "array", "json", default to "json".
+
+```bash
+$ curl -s "http://127.0.0.1:8080/list_pets?format=array"
+```
+
+will output:
+```json
+[[["name","age"],["Charlie","1"]]]
+```
 
 ### Full Config File
 ```json
