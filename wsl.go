@@ -2,6 +2,7 @@ package wsl
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -59,7 +60,10 @@ func (this *WSL) Start() {
 				log.Println(err)
 				return
 			}
-			fmt.Println(result)
+			jsonData, err := json.Marshal(result)
+			jsonString := string(jsonData)
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			fmt.Fprint(w, jsonString)
 		} else {
 			log.Println("Invalid script.")
 			return

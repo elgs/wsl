@@ -33,6 +33,16 @@ func (this *Config) httpsEnabled() bool {
 	return len(this.HttpsAddr) > 0 && len(this.CertFile) > 0 && len(this.KeyFile) > 0
 }
 
+func NewConfig(confFile string) *Config {
+	config := &Config{
+		ConfFile: confFile,
+	}
+	config.Scripts = make(map[string]string)
+	config.LoadConfig()
+	config.LoadScripts()
+	return config
+}
+
 func (this *Config) LoadConfig() error {
 	jqConf, err := gojq.NewFileQuery(this.ConfFile)
 	if err != nil {
