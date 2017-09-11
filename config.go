@@ -1,7 +1,6 @@
 package wsl
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -31,7 +30,6 @@ func (this *Config) httpEnabled() bool {
 }
 
 func (this *Config) httpsEnabled() bool {
-	fmt.Println(this.CertFile, this.KeyFile)
 	return len(this.HttpsAddr) > 0
 }
 
