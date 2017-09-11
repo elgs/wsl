@@ -16,6 +16,16 @@ type WSL struct {
 	db     *sql.DB
 }
 
+func New(confFile string) (*WSL, error) {
+	config, err := NewConfig(confFile)
+	if err != nil {
+		return nil, err
+	}
+	return &WSL{
+		Config: config,
+	}, nil
+}
+
 func (this *WSL) connectToDb() error {
 	if this.db == nil {
 		db, err := sql.Open(this.Config.DbType, this.Config.DbUrl)

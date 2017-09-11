@@ -17,8 +17,10 @@ import (
 )
 
 func main() {
-	wsld := &wsl.WSL{
-		Config: wsl.NewConfig("/home/pi/wsld/wsld.json"),
+	wsld, err := wsl.New("/home/pi/wsld/wsld.json")
+	if err != nil {
+		log.Println(err)
+		return
 	}
 	wsld.Start()
 	wsl.Hook()
@@ -90,7 +92,7 @@ Output as follows:
     "https_addr": "127.0.0.1:8443",
     "cert_file": "/path/to/cert_file",
     "key_file": "/path/to/key_file",
-    "script_path": "/path/to/script_path",
+    "script_path": "/path/to/script_path/",
     "db_type": "mysql",
     "db_url": "root:password@tcp(127.0.0.1:3306)/mydb"
 }

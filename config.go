@@ -32,20 +32,22 @@ func (this *Config) httpsEnabled() bool {
 	return len(this.HttpsAddr) > 0 && len(this.CertFile) > 0 && len(this.KeyFile) > 0
 }
 
-func NewConfig(confFile string) *Config {
+func NewConfig(confFile string) (*Config, error) {
 	config := &Config{
 		ConfFile: confFile,
 	}
 	config.Scripts = make(map[string]string)
-	config.LoadConfig()
-	config.LoadScripts()
-	return config
+	err := config.LoadConfig()
+	if err != nil {
+		return config, err
+	}
+	err = config.LoadScripts()
+	return config, err
 }
 
 func (this *Config) LoadConfig() error {
 	jqConf, err := gojq.NewFileQuery(this.ConfFile)
 	if err != nil {
-		//ignore
 		return err
 	}
 	v1, err := jqConf.QueryToString("http_addr")
