@@ -24,3 +24,13 @@ func main() {
     "db_url": "root:password@tcp(127.0.0.1:3306)/mydb"
 }
 ```
+
+Assume we have the `pet` table in `mydb` defined as follows:
+
+```sql
+CREATE TABLE `pet` (
+  `name` varchar(50) NOT NULL,
+  `age` int(11) NOT NULL,
+  PRIMARY KEY (`name`)
+)
+```

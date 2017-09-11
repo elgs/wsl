@@ -68,7 +68,6 @@ func (this *WSL) Start() {
 			log.Println("Invalid script:", qID)
 			return
 		}
-
 	})
 
 	if this.Config.httpEnabled() {
