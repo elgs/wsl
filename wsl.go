@@ -65,7 +65,7 @@ func (this *WSL) Start() {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			fmt.Fprint(w, jsonString)
 		} else {
-			log.Println("Invalid script.")
+			log.Println("Invalid script:", qID)
 			return
 		}
 
@@ -78,8 +78,8 @@ func (this *WSL) Start() {
 			ReadTimeout:  15 * time.Second,
 		}
 		go func() {
-			log.Fatal(srv.ListenAndServe())
 			fmt.Println(fmt.Sprint("Listening on http://", this.Config.HttpAddr, "/"))
+			log.Fatal(srv.ListenAndServe())
 		}()
 	}
 
@@ -90,8 +90,8 @@ func (this *WSL) Start() {
 			ReadTimeout:  15 * time.Second,
 		}
 		go func() {
-			log.Fatal(srvs.ListenAndServeTLS(this.Config.CertFile, this.Config.KeyFile))
 			fmt.Println(fmt.Sprint("Listening on https://", this.Config.HttpsAddr, "/"))
+			log.Fatal(srvs.ListenAndServeTLS(this.Config.CertFile, this.Config.KeyFile))
 		}()
 	}
 }

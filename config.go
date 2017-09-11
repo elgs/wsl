@@ -1,7 +1,6 @@
 package wsl
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -51,7 +50,6 @@ func (this *Config) LoadConfig() error {
 	}
 	v1, err := jqConf.QueryToString("http_addr")
 	if err == nil {
-		fmt.Println(v1)
 		this.HttpAddr = v1
 	}
 	v2, err := jqConf.QueryToString("https_addr")
