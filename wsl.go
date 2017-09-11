@@ -10,17 +10,14 @@ import (
 	"time"
 )
 
-// var addr = flag.String("addr", ":8080", "http service address, default to :8080")
-// flag.Parse()
-
 type WSL struct {
-	config *Config
+	Config *Config
 	db     *sql.DB
 }
 
-func (this *WSL) ConnectToDb() error {
+func (this *WSL) connectToDb() error {
 	if this.db == nil {
-		db, err := sql.Open(this.config.DbType, this.config.DbUrl)
+		db, err := sql.Open(this.Config.DbType, this.Config.DbUrl)
 		if err != nil {
 			return err
 		}
@@ -30,7 +27,11 @@ func (this *WSL) ConnectToDb() error {
 }
 
 func (this *WSL) Start() {
-	this.ConnectToDb()
+	err := this.connectToDb()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
@@ -49,11 +50,11 @@ func (this *WSL) Start() {
 			return
 		}
 		qID := urlPath[1]
-		fmt.Println(qID)
-		fmt.Println(qParams, len(qParams))
+		// fmt.Println(qID)
+		// fmt.Println(qParams, len(qParams))
 
-		if script, ok := this.config.Scripts[qID]; ok {
-			result, err := this.Exec(this.db, script, valuesToMap(&qParams))
+		if script, ok := this.Config.Scripts[qID]; ok {
+			result, err := this.exec(this.db, script, valuesToMap(&qParams))
 			if err != nil {
 				log.Println(err)
 				return
@@ -66,27 +67,27 @@ func (this *WSL) Start() {
 
 	})
 
-	if this.config.httpEnabled() {
+	if this.Config.httpEnabled() {
 		srv := &http.Server{
-			Addr:         this.config.HttpAddr,
+			Addr:         this.Config.HttpAddr,
 			WriteTimeout: 15 * time.Second,
 			ReadTimeout:  15 * time.Second,
 		}
 		go func() {
 			log.Fatal(srv.ListenAndServe())
-			fmt.Println(fmt.Sprint("Listening on http://", this.config.HttpAddr, "/"))
+			fmt.Println(fmt.Sprint("Listening on http://", this.Config.HttpAddr, "/"))
 		}()
 	}
 
-	if this.config.httpsEnabled() {
+	if this.Config.httpsEnabled() {
 		srvs := &http.Server{
-			Addr:         this.config.HttpsAddr,
+			Addr:         this.Config.HttpsAddr,
 			WriteTimeout: 15 * time.Second,
 			ReadTimeout:  15 * time.Second,
 		}
 		go func() {
-			log.Fatal(srvs.ListenAndServeTLS(this.config.CertFile, this.config.KeyFile))
-			fmt.Println(fmt.Sprint("Listening on https://", this.config.HttpsAddr, "/"))
+			log.Fatal(srvs.ListenAndServeTLS(this.Config.CertFile, this.Config.KeyFile))
+			fmt.Println(fmt.Sprint("Listening on https://", this.Config.HttpsAddr, "/"))
 		}()
 	}
 }

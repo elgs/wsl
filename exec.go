@@ -10,7 +10,7 @@ import (
 	"github.com/elgs/gosqljson"
 )
 
-func (this *WSL) Exec(db *sql.DB, script string, params map[string]string) ([]interface{}, error) {
+func (this *WSL) exec(db *sql.DB, script string, params map[string]string) ([]interface{}, error) {
 	var ret []interface{}
 
 	array := false
