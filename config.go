@@ -1,6 +1,7 @@
 package wsl
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -30,7 +31,8 @@ func (this *Config) httpEnabled() bool {
 }
 
 func (this *Config) httpsEnabled() bool {
-	return len(this.HttpsAddr) > 0 && len(this.CertFile) > 0 && len(this.KeyFile) > 0
+	fmt.Println(this.CertFile, this.KeyFile)
+	return len(this.HttpsAddr) > 0
 }
 
 func NewConfig(confFile string) (*Config, error) {
@@ -71,7 +73,7 @@ func (this *Config) LoadConfig() error {
 		this.KeyFile = v4
 	} else {
 		// default
-		this.CertFile = path.Join(path.Dir(this.ConfFile), "key.pem")
+		this.KeyFile = path.Join(path.Dir(this.ConfFile), "key.pem")
 	}
 	v5, err := jqConf.QueryToString("conf_file")
 	if err == nil {
