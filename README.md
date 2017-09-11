@@ -49,12 +49,12 @@ CREATE TABLE `pet` (
 ```
 
 ### Create a pet
-Now let's create a pet with `curl`:
+Now let's create a new pet with `curl`:
 
 ```bash
 $ curl "http://127.0.0.1:8080/new_pet?_0=Charlie&_1=1"
 ```
-where `new_pet` is the SQL script name, without the `.sql`, `_0` is for the first parameter in the SQL statement, and `_1` for the second.
+where `new_pet` is the SQL script name, without the `.sql`, `_0` is for the first parameter in the SQL statement, and `_1` for the second, and so on, if there are more.
 
 The `curl` command above yields the following output:
 ```
