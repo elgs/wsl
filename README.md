@@ -27,8 +27,8 @@ func main() {
 ### wsld.json
 ```json
 {
-    "http_addr":"127.0.0.1:8080",
-    "db_type":"mysql",
+    "http_addr": "127.0.0.1:8080",
+    "db_type": "mysql",
     "db_url": "root:password@tcp(127.0.0.1:3306)/mydb"
 }
 ```
@@ -82,4 +82,16 @@ Output as follows:
 ```
 
 ## Advanced
-TODO:
+
+### Full Config File
+```json
+{
+    "http_addr": "127.0.0.1:8080",
+    "https_addr": "127.0.0.1:8443",
+    "cert_file": "/path/to/cert_file",
+    "key_file": "/path/to/key_file",
+    "script_path": "/path/to/script_path",
+    "db_type": "mysql",
+    "db_url": "root:password@tcp(127.0.0.1:3306)/mydb"
+}
+```
