@@ -82,8 +82,6 @@ Output as follows:
 [[{"age":"1","name":"Charlie"}]]
 ```
 
-## Advanced
-
 ### URL Parameters
 
 #### case 
@@ -109,6 +107,35 @@ will output:
 ```json
 [[["name","age"],["Charlie","1"]]]
 ```
+
+## Advanced
+
+### A slightly more realistic example
+```golang
+package main
+
+import (
+	"flag"
+	"log"
+
+	"github.com/elgs/wsl"
+	_ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+	confFile := flag.String("conf", "/etc/myapp/app.json", "Configration file path.")
+	flag.Parse()
+
+	wsld, err := wsl.New(*confFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	wsld.Start()
+	wsl.Hook()
+}
+```
+
+Please note other configuration files like scripts, key and certificate will be assumed to be put in the same directory as `app.json`, which in the example is `/etc/myapp/`. You can change it anywhere for your new apps.
 
 ### Full Config File
 ```json
