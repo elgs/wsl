@@ -143,11 +143,36 @@ Please note other configuration files like scripts, key and certificate will be 
 {
     "http_addr": "127.0.0.1:8080",
     "https_addr": "127.0.0.1:8443",
-    "cors": false,
     "cert_file": "/path/to/cert_file",
     "key_file": "/path/to/key_file",
+    "cors": false,
     "script_path": "/path/to/script_path/",
     "db_type": "mysql",
     "db_url": "root:password@tcp(127.0.0.1:3306)/mydb"
 }
 ```
+
+#### http_addr
+The http address, in the format of `host:port`. If `http_addr` is not set in the configuration file, the server will not accept any http client connections.
+
+#### https_addr
+The https address, in the format of `host:port`. If `https_addr` is not set in the configuration file, the server will not accept any https client connections.
+
+#### cert_file
+The certificate file for the https server, default to `cert.pem` in the same directory of the configuration file.
+
+#### key_file
+The key file for the https server, default to `key.pem` in the same directory of the configuration file.
+
+#### cors
+Specify whether to allow Cross-Origin Resource Sharing (CORS) or not, default to `false`. 
+
+#### script_path
+Specify the location for the `.sql` scripts, default to the same directory of the configuration file.
+
+#### db_type
+`db_type` will be passed as the first parameter to `sql.Open(driverName, dataSourceName string) (*DB, error)`. Typical values are: `mysql`, `sqlite3`, and etc.
+
+#### db_url
+`db_url` will be passed as the second parameter to `sql.Open(driverName, dataSourceName string) (*DB, error)`. Check the format will specific database driver's provider.
+
