@@ -12,7 +12,7 @@ go get -u github.com/elgs/wsl
 package main
 
 import (
-    "log"
+	"log"
 
 	"github.com/elgs/wsl"
 	_ "github.com/go-sql-driver/mysql"
