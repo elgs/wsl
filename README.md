@@ -12,6 +12,8 @@ go get -u github.com/elgs/wsl
 package main
 
 import (
+    "log"
+
 	"github.com/elgs/wsl"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -19,8 +21,7 @@ import (
 func main() {
 	wsld, err := wsl.New("/home/pi/wsld/wsld.json")
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatal(err)
 	}
 	wsld.Start()
 	wsl.Hook()
