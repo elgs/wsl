@@ -102,7 +102,7 @@ func (this *Config) LoadScripts() error {
 	if this.ScriptPath == "" {
 		this.ScriptPath = path.Dir(this.ConfFile)
 	}
-	filepath.Walk(this.ScriptPath, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(this.ScriptPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Println(err)
 		}
@@ -116,5 +116,4 @@ func (this *Config) LoadScripts() error {
 		}
 		return nil
 	})
-	return nil
 }
