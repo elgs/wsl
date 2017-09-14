@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 )
@@ -53,21 +52,24 @@ func (this *WSL) Start() {
 		}
 
 		urlPath := strings.Split(r.URL.Path, "/")
-		qParams, err := url.ParseQuery(r.URL.RawQuery)
-		if err != nil {
-			log.Println(err)
-			return
-		}
 		if len(urlPath) < 2 {
 			log.Println("Invalid URL.")
 			return
 		}
 		qID := urlPath[1]
-		// fmt.Println(qID)
-		// fmt.Println(qParams, len(qParams))
 
 		if script, ok := this.Config.Scripts[qID]; ok {
-			result, err := this.exec(this.db, script, valuesToMap(&qParams))
+			sepIndex := strings.LastIndex(r.RemoteAddr, ":")
+			clientIp := r.RemoteAddr[0:sepIndex]
+			clientIp = strings.Replace(strings.Replace(clientIp, "[", "", -1), "]", "", -1)
+
+			r.ParseForm()
+
+			params := valuesToMap(&r.Form)
+
+			params["__client_ip"] = clientIp
+
+			result, err := this.exec(this.db, script, params)
 			if err != nil {
 				log.Println(err)
 				return

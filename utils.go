@@ -51,10 +51,12 @@ func extractScriptParamsFromMap(m map[string]string) map[string]string {
 	return ret
 }
 
-func valuesToMap(values *url.Values) map[string]string {
+func valuesToMap(values ...*url.Values) map[string]string {
 	ret := map[string]string{}
-	for k, v := range map[string][]string(*values) {
-		ret[k] = v[0]
+	for _, vs := range values {
+		for k, v := range map[string][]string(*vs) {
+			ret[k] = v[0]
+		}
 	}
 	return ret
 }
@@ -69,7 +71,13 @@ func sqlNormalize(sql *string) {
 			ret += line + "\n"
 		}
 	}
+	sqlSafe(sql)
 	*sql = ret
+}
+
+func sqlSafe(s *string) {
+	*s = strings.Replace(*s, "'", "''", -1)
+	*s = strings.Replace(*s, "--", "", -1)
 }
 
 func isQuery(sql string) bool {
