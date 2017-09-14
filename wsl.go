@@ -64,7 +64,6 @@ func (this *WSL) Start() {
 			clientIp = strings.Replace(strings.Replace(clientIp, "[", "", -1), "]", "", -1)
 
 			r.ParseForm()
-
 			params := valuesToMap(&r.Form)
 
 			params["__client_ip"] = clientIp
