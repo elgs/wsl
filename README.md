@@ -85,6 +85,9 @@ Output as follows:
 
 ### URL Parameters
 
+#### _0, _1, _2 and so on.
+The parameters starting with an underscore `_` followed by a number will be used for the parameters in the SQL prepared statements.
+
 #### case 
 Possible values are: "lower", "upper", "camel", any other value will default to the case of the table field name.
 
@@ -108,6 +111,11 @@ will output:
 ```json
 [[["name","age"],["Charlie","1"]]]
 ```
+
+### Script Parameters
+
+#### __client_ip
+Any occurence of `__client_ip` in the SQL scripts will be replaced with the client IP address.
 
 ## Advanced
 
