@@ -9,7 +9,7 @@ import "database/sql"
 type Interceptor interface {
 	Before(tx *sql.Tx, script string, params map[string]string) error
 	After(tx *sql.Tx, result []interface{}) error
-	OnError(tx *sql.Tx, err error) error
+	OnError(err *error) error
 }
 
 // GlobalInterceptors is the registry of a list of Interceptors that is

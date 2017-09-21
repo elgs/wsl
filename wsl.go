@@ -68,7 +68,7 @@ func (this *WSL) Start() {
 
 			params["__client_ip"] = clientIp
 
-			result, err := this.exec(this.db, script, params)
+			result, err := this.exec(qID, this.db, script, params)
 			if err != nil {
 				log.Println(err)
 				return

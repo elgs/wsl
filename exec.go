@@ -4,22 +4,39 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/elgs/gosplitargs"
 	"github.com/elgs/gosqljson"
 )
 
-func (this *WSL) exec(db *sql.DB, script string, params map[string]string) ([]interface{}, error) {
+func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]string) ([]interface{}, error) {
 	var ret []interface{}
-
-	format := params["format"]
-	theCase := params["case"]
 
 	tx, err := db.Begin()
 	if err != nil {
 		return nil, err
 	}
+
+	for _, gi := range GlobalInterceptors {
+		err := gi.Before(tx, script, params)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	for _, li := range LocalInterceptors[qID] {
+		err := li.Before(tx, script, params)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	format := params["format"]
+	theCase := params["case"]
 
 	scriptParams := extractScriptParamsFromMap(params)
 	for k, v := range scriptParams {
@@ -55,6 +72,10 @@ func (this *WSL) exec(db *sql.DB, script string, params map[string]string) ([]in
 				data = append([][]string{header}, data...)
 				if err != nil {
 					tx.Rollback()
+					ierr := this.interceptError(qID, &err)
+					if ierr != nil {
+						log.Println(ierr)
+					}
 					return nil, err
 				}
 				ret = append(ret, data)
@@ -62,6 +83,10 @@ func (this *WSL) exec(db *sql.DB, script string, params map[string]string) ([]in
 				data, err := gosqljson.QueryTxToMap(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
 				if err != nil {
 					tx.Rollback()
+					ierr := this.interceptError(qID, &err)
+					if ierr != nil {
+						log.Println(ierr)
+					}
 					return nil, err
 				}
 				ret = append(ret, data)
@@ -70,6 +95,10 @@ func (this *WSL) exec(db *sql.DB, script string, params map[string]string) ([]in
 			rowsAffected, err := gosqljson.ExecTx(tx, s, sqlParams[totalCount:totalCount+count]...)
 			if err != nil {
 				tx.Rollback()
+				ierr := this.interceptError(qID, &err)
+				if ierr != nil {
+					log.Println(ierr)
+				}
 				return nil, err
 			}
 			ret = append(ret, rowsAffected)
@@ -77,6 +106,39 @@ func (this *WSL) exec(db *sql.DB, script string, params map[string]string) ([]in
 		totalCount += count
 	}
 
+	for _, li := range LocalInterceptors[qID] {
+		err := li.After(tx, ret)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	for _, gi := range GlobalInterceptors {
+		err := gi.After(tx, ret)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
 	tx.Commit()
 	return ret, nil
+}
+
+func (this *WSL) interceptError(qID string, err *error) error {
+	for _, li := range LocalInterceptors[qID] {
+		err := li.OnError(err)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, gi := range GlobalInterceptors {
+		err := gi.OnError(err)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
