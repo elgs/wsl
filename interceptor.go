@@ -7,8 +7,8 @@ import "database/sql"
 // executed. An example would be to provide additional input parameters for
 // the query, or convert the result to other formats.
 type Interceptor interface {
-	Before(tx *sql.Tx, script string, params map[string]string) error
-	After(tx *sql.Tx, result []interface{}) error
+	Before(tx *sql.Tx, script *string, params map[string]string) error
+	After(tx *sql.Tx, result *[]interface{}) error
 	OnError(err *error) error
 }
 

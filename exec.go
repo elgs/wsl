@@ -20,7 +20,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, gi := range GlobalInterceptors {
-		err := gi.Before(tx, script, params)
+		err := gi.Before(tx, &script, params)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -28,7 +28,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, li := range LocalInterceptors[qID] {
-		err := li.Before(tx, script, params)
+		err := li.Before(tx, &script, params)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -107,7 +107,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, li := range LocalInterceptors[qID] {
-		err := li.After(tx, ret)
+		err := li.After(tx, &ret)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -115,7 +115,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, gi := range GlobalInterceptors {
-		err := gi.After(tx, ret)
+		err := gi.After(tx, &ret)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
