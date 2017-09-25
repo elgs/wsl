@@ -44,6 +44,7 @@ func (this *WSL) Start() {
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+
 		if this.Config.Cors {
 			w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -56,7 +57,6 @@ func (this *WSL) Start() {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprint(w, fmt.Sprint(`{"err":"Invalid URL"}`))
-			log.Println(err)
 			return
 		}
 		qID := urlPath[1]
@@ -66,7 +66,14 @@ func (this *WSL) Start() {
 			clientIp := r.RemoteAddr[0:sepIndex]
 			clientIp = strings.Replace(strings.Replace(clientIp, "[", "", -1), "]", "", -1)
 
-			r.ParseForm()
+			err := r.ParseForm()
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
+				log.Println(err)
+				return
+			}
 			params := valuesToMap(&r.Form)
 
 			params["__client_ip"] = clientIp
@@ -91,6 +98,9 @@ func (this *WSL) Start() {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			fmt.Fprint(w, jsonString)
 		} else {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, fmt.Sprint(`{"err":"`, `Invalid script:`, qID, `"}`))
 			log.Println("Invalid script:", qID)
 			return
 		}
