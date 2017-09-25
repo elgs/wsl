@@ -53,7 +53,10 @@ func (this *WSL) Start() {
 
 		urlPath := strings.Split(r.URL.Path, "/")
 		if len(urlPath) < 2 {
-			log.Println("Invalid URL.")
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, fmt.Sprint(`{"err":"Invalid URL"}`))
+			log.Println(err)
 			return
 		}
 		qID := urlPath[1]
@@ -70,10 +73,20 @@ func (this *WSL) Start() {
 
 			result, err := this.exec(qID, this.db, script, params)
 			if err != nil {
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
 				log.Println(err)
 				return
 			}
 			jsonData, err := json.Marshal(result)
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
+				log.Println(err)
+				return
+			}
 			jsonString := string(jsonData)
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			fmt.Fprint(w, jsonString)
