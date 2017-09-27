@@ -30,7 +30,7 @@ func (this *DefaultInterceptor) OnError(err *error) error {
 	return nil
 }
 
-func RegisterToQuery(qID string, i Interceptor) {
+func RegisterQueryInterceptors(qID string, i Interceptor) {
 	if _, ok := queryInterceptors[qID]; ok {
 		queryInterceptors[qID] = append(queryInterceptors[qID], i)
 	} else {
@@ -38,7 +38,7 @@ func RegisterToQuery(qID string, i Interceptor) {
 	}
 }
 
-func RegisterToGlobal(i Interceptor) {
+func RegisterGlobalInterceptors(i Interceptor) {
 	globalInterceptors = append(globalInterceptors, i)
 }
 
