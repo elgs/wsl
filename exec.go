@@ -19,7 +19,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 		return nil, err
 	}
 
-	for _, gi := range GlobalInterceptors {
+	for _, gi := range globalInterceptors {
 		err := gi.Before(tx, &script, params, headers)
 		if err != nil {
 			tx.Rollback()
@@ -27,7 +27,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 		}
 	}
 
-	for _, li := range LocalInterceptors[qID] {
+	for _, li := range queryInterceptors[qID] {
 		err := li.Before(tx, &script, params, headers)
 		if err != nil {
 			tx.Rollback()
@@ -106,7 +106,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 		totalCount += count
 	}
 
-	for _, li := range LocalInterceptors[qID] {
+	for _, li := range queryInterceptors[qID] {
 		err := li.After(tx, &ret)
 		if err != nil {
 			tx.Rollback()
@@ -114,7 +114,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 		}
 	}
 
-	for _, gi := range GlobalInterceptors {
+	for _, gi := range globalInterceptors {
 		err := gi.After(tx, &ret)
 		if err != nil {
 			tx.Rollback()
@@ -127,14 +127,14 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 }
 
 func (this *WSL) interceptError(qID string, err *error) error {
-	for _, li := range LocalInterceptors[qID] {
+	for _, li := range queryInterceptors[qID] {
 		err := li.OnError(err)
 		if err != nil {
 			return err
 		}
 	}
 
-	for _, gi := range GlobalInterceptors {
+	for _, gi := range globalInterceptors {
 		err := gi.OnError(err)
 		if err != nil {
 			return err
