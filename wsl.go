@@ -44,7 +44,6 @@ func (this *WSL) Start() {
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-
 		if this.Config.Cors {
 			w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -61,6 +60,8 @@ func (this *WSL) Start() {
 		}
 		qID := urlPath[1]
 
+		headers := valuesToMap(r.Header)
+
 		if script, ok := this.Config.Scripts[qID]; ok {
 			sepIndex := strings.LastIndex(r.RemoteAddr, ":")
 			clientIp := r.RemoteAddr[0:sepIndex]
@@ -74,11 +75,11 @@ func (this *WSL) Start() {
 				log.Println(err)
 				return
 			}
-			params := valuesToMap(&r.Form)
+			params := valuesToMap(r.Form)
 
 			params["__client_ip"] = clientIp
 
-			result, err := this.exec(qID, this.db, script, params)
+			result, err := this.exec(qID, this.db, script, params, headers)
 			if err != nil {
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
 				w.WriteHeader(http.StatusBadRequest)

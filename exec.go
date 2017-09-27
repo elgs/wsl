@@ -11,7 +11,7 @@ import (
 	"github.com/elgs/gosqljson"
 )
 
-func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]string) ([]interface{}, error) {
+func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]string, headers map[string]string) ([]interface{}, error) {
 	var ret []interface{}
 
 	tx, err := db.Begin()
@@ -20,7 +20,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, gi := range GlobalInterceptors {
-		err := gi.Before(tx, &script, params)
+		err := gi.Before(tx, &script, params, headers)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -28,7 +28,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, li := range LocalInterceptors[qID] {
-		err := li.Before(tx, &script, params)
+		err := li.Before(tx, &script, params, headers)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
