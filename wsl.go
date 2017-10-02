@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -60,14 +62,12 @@ func (this *WSL) Start() {
 		}
 		qID := urlPath[1]
 
-		headers := valuesToMap(r.Header)
-
 		if script, ok := this.Config.Scripts[qID]; ok {
 			sepIndex := strings.LastIndex(r.RemoteAddr, ":")
 			clientIp := r.RemoteAddr[0:sepIndex]
 			clientIp = strings.Replace(strings.Replace(clientIp, "[", "", -1), "]", "", -1)
 
-			err := r.ParseForm()
+			body, err := ioutil.ReadAll(r.Body)
 			if err != nil {
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
 				w.WriteHeader(http.StatusBadRequest)
@@ -75,9 +75,26 @@ func (this *WSL) Start() {
 				log.Println(err)
 				return
 			}
-			params := valuesToMap(r.Form)
+			var bodyData map[string]string
+			json.Unmarshal(body, &bodyData)
+			//intentionally ignore the errors
+
+			paramValues, err := url.ParseQuery(r.URL.RawQuery)
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
+				log.Println(err)
+				return
+			}
+			params := valuesToMap(paramValues)
+			for k, v := range bodyData {
+				params[k] = v
+			}
 
 			params["__client_ip"] = clientIp
+
+			headers := valuesToMap(r.Header)
 
 			result, err := this.exec(qID, this.db, script, params, headers)
 			if err != nil {
