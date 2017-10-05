@@ -19,7 +19,7 @@ func (this *LoginInterceptor) Before(tx *sql.Tx, script *string, params map[stri
 }
 
 func (this *LoginInterceptor) After(tx *sql.Tx, result *[]interface{}) error {
-	if v, ok := (*result)[3].([]map[string]string); ok {
+	if v, ok := (*result)[0].([]map[string]string); ok {
 		if len(v) == 0 {
 			log.Println("Login failed.")
 		} else {

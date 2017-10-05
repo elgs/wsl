@@ -44,6 +44,7 @@ func extractScriptParamsFromMap(m map[string]string) map[string]string {
 	ret := map[string]string{}
 	for k, v := range m {
 		if strings.HasPrefix(k, "__") {
+			sqlSafe(&v)
 			ret[k] = v
 		}
 	}
@@ -60,7 +61,8 @@ func valuesToMap(values ...map[string][]string) map[string]string {
 	return ret
 }
 
-func sqlNormalize(sql *string) {
+// return whether export the result of this sql statement or not
+func sqlNormalize(sql *string) bool {
 	*sql = strings.TrimSpace(*sql)
 	var ret string
 	lines := strings.Split(*sql, "\n")
@@ -70,8 +72,13 @@ func sqlNormalize(sql *string) {
 			ret += line + "\n"
 		}
 	}
-	sqlSafe(sql)
-	*sql = ret
+	if strings.HasPrefix(ret, "!") {
+		*sql = ret[1:]
+		return true
+	} else {
+		*sql = ret
+		return false
+	}
 }
 
 func sqlSafe(s *string) {

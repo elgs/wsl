@@ -12,7 +12,7 @@ import (
 )
 
 func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]string, headers map[string]string) ([]interface{}, error) {
-	var ret []interface{}
+	ret := []interface{}{}
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -52,7 +52,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	sqlParams := extractParamsFromMap(params)
 	totalCount := 0
 	for _, s := range scriptsArray {
-		sqlNormalize(&s)
+		export := sqlNormalize(&s)
 		if len(s) == 0 {
 			continue
 		}
@@ -78,7 +78,9 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 					}
 					return nil, err
 				}
-				ret = append(ret, data)
+				if export {
+					ret = append(ret, data)
+				}
 			} else {
 				data, err := gosqljson.QueryTxToMap(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
 				if err != nil {
@@ -89,7 +91,9 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 					}
 					return nil, err
 				}
-				ret = append(ret, data)
+				if export {
+					ret = append(ret, data)
+				}
 			}
 		} else {
 			rowsAffected, err := gosqljson.ExecTx(tx, s, sqlParams[totalCount:totalCount+count]...)
@@ -101,7 +105,9 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 				}
 				return nil, err
 			}
-			ret = append(ret, rowsAffected)
+			if export {
+				ret = append(ret, rowsAffected)
+			}
 		}
 		totalCount += count
 	}
