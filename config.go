@@ -102,7 +102,8 @@ func (this *Config) LoadScripts() error {
 	if this.ScriptPath == "" {
 		this.ScriptPath = path.Dir(this.ConfFile)
 	}
-	return filepath.Walk(this.ScriptPath, func(path string, info os.FileInfo, err error) error {
+	scripts := map[string]string{}
+	err := filepath.Walk(this.ScriptPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Println(err)
 		}
@@ -112,8 +113,10 @@ func (this *Config) LoadScripts() error {
 				log.Println(err)
 			}
 			scriptName := strings.TrimSuffix(strings.ToLower(info.Name()), ".sql")
-			this.Scripts[scriptName] = string(data)
+			scripts[scriptName] = string(data)
 		}
 		return nil
 	})
+	this.Scripts = scripts
+	return err
 }

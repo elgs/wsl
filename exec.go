@@ -19,8 +19,12 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 		return nil, err
 	}
 
+	fns := map[string]func(){
+		"loadScripts": func() { this.Config.LoadScripts() },
+	}
+
 	for _, gi := range globalInterceptors {
-		err := gi.Before(tx, &script, params, headers)
+		err := gi.Before(tx, &script, params, headers, fns)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -28,7 +32,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, li := range queryInterceptors[qID] {
-		err := li.Before(tx, &script, params, headers)
+		err := li.Before(tx, &script, params, headers, fns)
 		if err != nil {
 			tx.Rollback()
 			return nil, err

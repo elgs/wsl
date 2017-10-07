@@ -9,14 +9,19 @@ import (
 // executed. An example would be to provide additional input parameters for
 // the query, or convert the result to other formats.
 type Interceptor interface {
-	Before(tx *sql.Tx, script *string, params map[string]string, headers map[string]string) error
+	Before(tx *sql.Tx, script *string, params map[string]string, headers map[string]string, fns map[string]func()) error
 	After(tx *sql.Tx, result *[]interface{}) error
 	OnError(err *error) error
 }
 
 type DefaultInterceptor struct{}
 
-func (this *DefaultInterceptor) Before(tx *sql.Tx, script *string, params map[string]string, headers map[string]string) error {
+func (this *DefaultInterceptor) Before(
+	tx *sql.Tx,
+	script *string,
+	params map[string]string,
+	headers map[string]string,
+	fns map[string]func()) error {
 	// log.Println("Default:Before")
 	return nil
 }
