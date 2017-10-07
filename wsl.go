@@ -53,6 +53,10 @@ func (this *WSL) Start() {
 			w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
 		}
 
+		if r.Method == "OPTIONS" {
+			return
+		}
+
 		urlPath := strings.Split(r.URL.Path, "/")
 		if len(urlPath) < 2 {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
