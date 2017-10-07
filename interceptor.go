@@ -2,7 +2,6 @@ package wsl
 
 import (
 	"database/sql"
-	"log"
 )
 
 // Interceptor provides a chance for application to gain more controls over
@@ -18,16 +17,16 @@ type Interceptor interface {
 type DefaultInterceptor struct{}
 
 func (this *DefaultInterceptor) Before(tx *sql.Tx, script *string, params map[string]string, headers map[string]string) error {
-	log.Println("Default:Before")
+	// log.Println("Default:Before")
 	return nil
 }
 func (this *DefaultInterceptor) After(tx *sql.Tx, result *[]interface{}) error {
-	log.Println("Default:After")
+	// log.Println("Default:After")
 	return nil
 }
 func (this *DefaultInterceptor) OnError(err *error) error {
-	log.Println("Default:Error")
-	return nil
+	// log.Println("Default:Error")
+	return *err
 }
 
 func RegisterQueryInterceptors(qID string, i Interceptor) {
