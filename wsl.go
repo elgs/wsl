@@ -66,66 +66,59 @@ func (this *WSL) Start() {
 		}
 		qID := urlPath[1]
 
-		if script, ok := this.Config.Scripts[qID]; ok {
-			sepIndex := strings.LastIndex(r.RemoteAddr, ":")
-			clientIp := r.RemoteAddr[0:sepIndex]
-			clientIp = strings.Replace(strings.Replace(clientIp, "[", "", -1), "]", "", -1)
+		script := this.Config.Scripts[qID]
+		sepIndex := strings.LastIndex(r.RemoteAddr, ":")
+		clientIp := r.RemoteAddr[0:sepIndex]
+		clientIp = strings.Replace(strings.Replace(clientIp, "[", "", -1), "]", "", -1)
 
-			body, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
-				log.Println(err)
-				return
-			}
-			var bodyData map[string]string
-			json.Unmarshal(body, &bodyData)
-			//intentionally ignore the errors
-
-			paramValues, err := url.ParseQuery(r.URL.RawQuery)
-			if err != nil {
-				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
-				log.Println(err)
-				return
-			}
-			params := valuesToMap(paramValues)
-			for k, v := range bodyData {
-				params[k] = v
-			}
-
-			params["__client_ip"] = clientIp
-
-			headers := valuesToMap(r.Header)
-
-			result, err := this.exec(qID, this.db, script, params, headers)
-			if err != nil {
-				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
-				log.Println(err)
-				return
-			}
-			jsonData, err := json.Marshal(result)
-			if err != nil {
-				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
-				log.Println(err)
-				return
-			}
-			jsonString := string(jsonData)
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			fmt.Fprint(w, jsonString)
-		} else {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprint(w, fmt.Sprint(`{"err":"`, `Invalid script:`, qID, `"}`))
-			log.Println("Invalid script:", qID)
+			fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
+			log.Println(err)
 			return
 		}
+		var bodyData map[string]string
+		json.Unmarshal(body, &bodyData)
+		//intentionally ignore the errors
+
+		paramValues, err := url.ParseQuery(r.URL.RawQuery)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
+			log.Println(err)
+			return
+		}
+		params := valuesToMap(paramValues)
+		for k, v := range bodyData {
+			params[k] = v
+		}
+
+		params["__client_ip"] = clientIp
+
+		headers := valuesToMap(r.Header)
+
+		result, err := this.exec(qID, this.db, script, params, headers)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
+			log.Println(err)
+			return
+		}
+		jsonData, err := json.Marshal(result)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
+			log.Println(err)
+			return
+		}
+		jsonString := string(jsonData)
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		fmt.Fprint(w, jsonString)
 	})
 
 	if this.Config.httpEnabled() {

@@ -35,81 +35,83 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 		}
 	}
 
-	format := params["format"]
-	theCase := params["case"]
+	if script != "" {
+		format := params["format"]
+		theCase := params["case"]
 
-	scriptParams := extractScriptParamsFromMap(params)
-	for k, v := range scriptParams {
-		script = strings.Replace(script, k, v, -1)
-	}
-
-	scriptsArray, err := gosplitargs.SplitArgs(script, ";", true)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	sqlParams := extractParamsFromMap(params)
-	totalCount := 0
-	for _, s := range scriptsArray {
-		export := sqlNormalize(&s)
-		if len(s) == 0 {
-			continue
+		scriptParams := extractScriptParamsFromMap(params)
+		for k, v := range scriptParams {
+			script = strings.Replace(script, k, v, -1)
 		}
-		count, err := gosplitargs.CountSeparators(s, "\\?")
+
+		scriptsArray, err := gosplitargs.SplitArgs(script, ";", true)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
 		}
-		if len(sqlParams) < totalCount+count {
-			tx.Rollback()
-			return nil, errors.New(fmt.Sprintln("Incorrect param count. Expected: ", totalCount+count, " actual: ", len(sqlParams)))
-		}
-		isQ := isQuery(s)
-		if isQ {
-			if format == "array" {
-				header, data, err := gosqljson.QueryTxToArray(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
-				data = append([][]string{header}, data...)
-				if err != nil {
-					tx.Rollback()
-					ierr := this.interceptError(qID, &err)
-					if ierr != nil {
-						log.Println(ierr)
-					}
-					return nil, err
-				}
-				if export {
-					ret = append(ret, data)
-				}
-			} else {
-				data, err := gosqljson.QueryTxToMap(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
-				if err != nil {
-					tx.Rollback()
-					ierr := this.interceptError(qID, &err)
-					if ierr != nil {
-						log.Println(ierr)
-					}
-					return nil, err
-				}
-				if export {
-					ret = append(ret, data)
-				}
+
+		sqlParams := extractParamsFromMap(params)
+		totalCount := 0
+		for _, s := range scriptsArray {
+			export := sqlNormalize(&s)
+			if len(s) == 0 {
+				continue
 			}
-		} else {
-			rowsAffected, err := gosqljson.ExecTx(tx, s, sqlParams[totalCount:totalCount+count]...)
+			count, err := gosplitargs.CountSeparators(s, "\\?")
 			if err != nil {
 				tx.Rollback()
-				ierr := this.interceptError(qID, &err)
-				if ierr != nil {
-					log.Println(ierr)
-				}
 				return nil, err
 			}
-			if export {
-				ret = append(ret, rowsAffected)
+			if len(sqlParams) < totalCount+count {
+				tx.Rollback()
+				return nil, errors.New(fmt.Sprintln("Incorrect param count. Expected: ", totalCount+count, " actual: ", len(sqlParams)))
 			}
+			isQ := isQuery(s)
+			if isQ {
+				if format == "array" {
+					header, data, err := gosqljson.QueryTxToArray(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
+					data = append([][]string{header}, data...)
+					if err != nil {
+						tx.Rollback()
+						ierr := this.interceptError(qID, &err)
+						if ierr != nil {
+							log.Println(ierr)
+						}
+						return nil, err
+					}
+					if export {
+						ret = append(ret, data)
+					}
+				} else {
+					data, err := gosqljson.QueryTxToMap(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
+					if err != nil {
+						tx.Rollback()
+						ierr := this.interceptError(qID, &err)
+						if ierr != nil {
+							log.Println(ierr)
+						}
+						return nil, err
+					}
+					if export {
+						ret = append(ret, data)
+					}
+				}
+			} else {
+				rowsAffected, err := gosqljson.ExecTx(tx, s, sqlParams[totalCount:totalCount+count]...)
+				if err != nil {
+					tx.Rollback()
+					ierr := this.interceptError(qID, &err)
+					if ierr != nil {
+						log.Println(ierr)
+					}
+					return nil, err
+				}
+				if export {
+					ret = append(ret, rowsAffected)
+				}
+			}
+			totalCount += count
 		}
-		totalCount += count
 	}
 
 	for _, li := range queryInterceptors[qID] {
