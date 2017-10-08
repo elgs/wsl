@@ -9,9 +9,25 @@ import (
 // executed. An example would be to provide additional input parameters for
 // the query, or convert the result to other formats.
 type Interceptor interface {
-	Before(tx *sql.Tx, script *string, params map[string]string, headers map[string]string, fns map[string]func()) error
-	After(tx *sql.Tx, result *[]interface{}) error
+	Before(tx *sql.Tx, script *string, params map[string]string, headers map[string]string, ii *InterceptorInterface) error
+	After(tx *sql.Tx, result *[]interface{}, ii *InterceptorInterface) error
 	OnError(err *error) error
+}
+
+type InterceptorInterface struct {
+	wsl *WSL
+}
+
+func (this *InterceptorInterface) LoadScripts() ([]string, error) {
+	err := this.wsl.Config.LoadScripts()
+	scriptNames := make([]string, len(this.wsl.Config.Scripts))
+
+	i := 0
+	for k := range this.wsl.Config.Scripts {
+		scriptNames[i] = k
+		i++
+	}
+	return scriptNames, err
 }
 
 type DefaultInterceptor struct{}
@@ -21,11 +37,11 @@ func (this *DefaultInterceptor) Before(
 	script *string,
 	params map[string]string,
 	headers map[string]string,
-	fns map[string]func()) error {
+	ii *InterceptorInterface) error {
 	// log.Println("Default:Before")
 	return nil
 }
-func (this *DefaultInterceptor) After(tx *sql.Tx, result *[]interface{}) error {
+func (this *DefaultInterceptor) After(tx *sql.Tx, result *[]interface{}, ii *InterceptorInterface) error {
 	// log.Println("Default:After")
 	return nil
 }
