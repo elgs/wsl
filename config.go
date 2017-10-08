@@ -9,35 +9,56 @@ import (
 	"strings"
 
 	"github.com/elgs/gojq"
+	"github.com/elgs/gostrgen"
 )
 
-// Config structure
-type Config struct {
-	HttpAddr   string
-	HttpsAddr  string
-	Cors       bool
-	CertFile   string
-	KeyFile    string
-	ConfFile   string
+type ConfigWeb struct {
+	HttpAddr  string
+	HttpsAddr string
+	Cors      bool
+	CertFile  string
+	KeyFile   string
+	JwtKey    string
+}
+
+type ConfigDb struct {
 	ScriptPath string
 	DbType     string
 	DbUrl      string
 	Scripts    map[string]string
 }
 
+type ConfigMail struct {
+	MailHost     string
+	MailUsername string
+	MailPassword string
+	MailFrom     string
+}
+
+// Config structure
+type Config struct {
+	ConfFile string
+	Web      *ConfigWeb
+	Db       *ConfigDb
+	Mail     *ConfigMail
+}
+
 func (this *Config) httpEnabled() bool {
-	return len(this.HttpAddr) > 0
+	return len(this.Web.HttpAddr) > 0
 }
 
 func (this *Config) httpsEnabled() bool {
-	return len(this.HttpsAddr) > 0
+	return len(this.Web.HttpsAddr) > 0
 }
 
 func NewConfig(confFile string) (*Config, error) {
 	config := &Config{
 		ConfFile: confFile,
+		Web:      &ConfigWeb{},
+		Db:       &ConfigDb{},
+		Mail:     &ConfigMail{},
 	}
-	config.Scripts = make(map[string]string)
+	config.Db.Scripts = make(map[string]string)
 	err := config.LoadConfig()
 	if err != nil {
 		return config, err
@@ -51,60 +72,87 @@ func (this *Config) LoadConfig() error {
 	if err != nil {
 		return err
 	}
-	v1, err := jqConf.QueryToString("http_addr")
+	v1, err := jqConf.QueryToString("web.http_addr")
 	if err == nil {
-		this.HttpAddr = v1
+		this.Web.HttpAddr = v1
 	}
-	v2, err := jqConf.QueryToString("https_addr")
+	v2, err := jqConf.QueryToString("web.https_addr")
 	if err == nil {
-		this.HttpsAddr = v2
+		this.Web.HttpsAddr = v2
 	}
-	v3, err := jqConf.QueryToString("cert_file")
+	v3, err := jqConf.QueryToString("web.cert_file")
 	if err == nil {
-		this.CertFile = v3
+		this.Web.CertFile = v3
 	} else {
 		// default
-		this.CertFile = path.Join(path.Dir(this.ConfFile), "cert.pem")
+		this.Web.CertFile = path.Join(path.Dir(this.ConfFile), "cert.pem")
 	}
-	v4, err := jqConf.QueryToString("key_file")
+	v4, err := jqConf.QueryToString("web.key_file")
 	if err == nil {
-		this.KeyFile = v4
+		this.Web.KeyFile = v4
 	} else {
 		// default
-		this.KeyFile = path.Join(path.Dir(this.ConfFile), "key.pem")
+		this.Web.KeyFile = path.Join(path.Dir(this.ConfFile), "key.pem")
 	}
-	v5, err := jqConf.QueryToString("conf_file")
-	if err == nil {
-		this.ConfFile = v5
-	}
-	v6, err := jqConf.QueryToString("script_path")
-	if err == nil {
-		this.ScriptPath = v6
-	}
-	v7, err := jqConf.QueryToString("db_type")
-	if err == nil {
-		this.DbType = v7
-	}
-	v8, err := jqConf.QueryToString("db_url")
-	if err == nil {
-		this.DbUrl = v8
-	}
-	v9, err := jqConf.QueryToBool("cors")
-	if err == nil {
-		this.Cors = v9
+
+	v5, err := jqConf.QueryToString("web.jwt_key")
+	if err == nil && len(v5) > 0 {
+		this.Web.JwtKey = v5
 	} else {
-		this.Cors = false
+		// default
+		jwtKey, err := gostrgen.RandGen(20, gostrgen.All, "", "")
+		if err != nil {
+			log.Fatal(err)
+		}
+		this.Web.JwtKey = jwtKey
 	}
+	v6, err := jqConf.QueryToString("database.script_path")
+	if err == nil {
+		this.Db.ScriptPath = v6
+	}
+	v7, err := jqConf.QueryToString("database.db_type")
+	if err == nil {
+		this.Db.DbType = v7
+	}
+	v8, err := jqConf.QueryToString("database.db_url")
+	if err == nil {
+		this.Db.DbUrl = v8
+	}
+	v9, err := jqConf.QueryToBool("web.cors")
+	if err == nil {
+		this.Web.Cors = v9
+	} else {
+		this.Web.Cors = false
+	}
+	v10, err := jqConf.QueryToString("mail.mail_host")
+	if err == nil {
+		this.Mail.MailHost = v10
+	}
+	v11, err := jqConf.QueryToString("mail.mail_username")
+	if err == nil {
+		this.Mail.MailUsername = v11
+	}
+	v12, err := jqConf.QueryToString("mail.mail_password")
+	if err == nil {
+		this.Mail.MailPassword = v12
+	}
+	v13, err := jqConf.QueryToString("mail.mail_from")
+	if err == nil {
+		this.Mail.MailFrom = v13
+	}
+	// fmt.Println(this.Web)
+	// fmt.Println(this.Db)
+	// fmt.Println(this.Mail)
 	return nil
 }
 
 func (this *Config) LoadScripts() error {
-	if this.ScriptPath == "" {
-		this.ScriptPath = path.Dir(this.ConfFile)
+	if this.Db.ScriptPath == "" {
+		this.Db.ScriptPath = path.Dir(this.ConfFile)
 	}
-	this.Scripts = nil
-	this.Scripts = map[string]string{}
-	err := filepath.Walk(this.ScriptPath, func(path string, info os.FileInfo, err error) error {
+	this.Db.Scripts = nil
+	this.Db.Scripts = map[string]string{}
+	err := filepath.Walk(this.Db.ScriptPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Println(err)
 		}
@@ -114,7 +162,7 @@ func (this *Config) LoadScripts() error {
 				log.Println(err)
 			}
 			scriptName := strings.TrimSuffix(strings.ToLower(info.Name()), ".sql")
-			this.Scripts[scriptName] = string(data)
+			this.Db.Scripts[scriptName] = string(data)
 		}
 		return nil
 	})

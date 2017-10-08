@@ -20,14 +20,18 @@ type InterceptorInterface struct {
 
 func (this *InterceptorInterface) LoadScripts() ([]string, error) {
 	err := this.wsl.Config.LoadScripts()
-	scriptNames := make([]string, len(this.wsl.Config.Scripts))
+	scriptNames := make([]string, len(this.wsl.Config.Db.Scripts))
 
 	i := 0
-	for k := range this.wsl.Config.Scripts {
+	for k := range this.wsl.Config.Db.Scripts {
 		scriptNames[i] = k
 		i++
 	}
 	return scriptNames, err
+}
+
+func (this *InterceptorInterface) GetJwtKey() []byte {
+	return []byte(this.wsl.Config.Web.JwtKey)
 }
 
 type DefaultInterceptor struct{}

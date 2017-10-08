@@ -29,7 +29,7 @@ func New(confFile string) (*WSL, error) {
 
 func (this *WSL) connectToDb() error {
 	if this.db == nil {
-		db, err := sql.Open(this.Config.DbType, this.Config.DbUrl)
+		db, err := sql.Open(this.Config.Db.DbType, this.Config.Db.DbUrl)
 		if err != nil {
 			return err
 		}
@@ -46,7 +46,7 @@ func (this *WSL) Start() {
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if this.Config.Cors {
+		if this.Config.Web.Cors {
 			w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Access-Control-Allow-Methods", r.Header.Get("Access-Control-Request-Method"))
@@ -66,7 +66,7 @@ func (this *WSL) Start() {
 		}
 		qID := urlPath[1]
 
-		script := this.Config.Scripts[qID]
+		script := this.Config.Db.Scripts[qID]
 		sepIndex := strings.LastIndex(r.RemoteAddr, ":")
 		clientIp := r.RemoteAddr[0:sepIndex]
 		clientIp = strings.Replace(strings.Replace(clientIp, "[", "", -1), "]", "", -1)
@@ -123,25 +123,25 @@ func (this *WSL) Start() {
 
 	if this.Config.httpEnabled() {
 		srv := &http.Server{
-			Addr:         this.Config.HttpAddr,
+			Addr:         this.Config.Web.HttpAddr,
 			WriteTimeout: 15 * time.Second,
 			ReadTimeout:  15 * time.Second,
 		}
 		go func() {
-			fmt.Println(fmt.Sprint("Listening on http://", this.Config.HttpAddr, "/"))
+			fmt.Println(fmt.Sprint("Listening on http://", this.Config.Web.HttpAddr, "/"))
 			log.Fatal(srv.ListenAndServe())
 		}()
 	}
 
 	if this.Config.httpsEnabled() {
 		srvs := &http.Server{
-			Addr:         this.Config.HttpsAddr,
+			Addr:         this.Config.Web.HttpsAddr,
 			WriteTimeout: 15 * time.Second,
 			ReadTimeout:  15 * time.Second,
 		}
 		go func() {
-			fmt.Println(fmt.Sprint("Listening on https://", this.Config.HttpsAddr, "/"))
-			log.Fatal(srvs.ListenAndServeTLS(this.Config.CertFile, this.Config.KeyFile))
+			fmt.Println(fmt.Sprint("Listening on https://", this.Config.Web.HttpsAddr, "/"))
+			log.Fatal(srvs.ListenAndServeTLS(this.Config.Web.CertFile, this.Config.Web.KeyFile))
 		}()
 	}
 }
