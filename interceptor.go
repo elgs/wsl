@@ -9,29 +9,9 @@ import (
 // executed. An example would be to provide additional input parameters for
 // the query, or convert the result to other formats.
 type Interceptor interface {
-	Before(tx *sql.Tx, script *string, params map[string]string, headers map[string]string, ii *InterceptorInterface) error
-	After(tx *sql.Tx, result *[]interface{}, ii *InterceptorInterface) error
+	Before(tx *sql.Tx, script *string, params map[string]string, headers map[string]string, config *Config) error
+	After(tx *sql.Tx, result *[]interface{}, config *Config) error
 	OnError(err *error) error
-}
-
-type InterceptorInterface struct {
-	wsl *WSL
-}
-
-func (this *InterceptorInterface) LoadScripts() ([]string, error) {
-	err := this.wsl.Config.LoadScripts()
-	scriptNames := make([]string, len(this.wsl.Config.Db.Scripts))
-
-	i := 0
-	for k := range this.wsl.Config.Db.Scripts {
-		scriptNames[i] = k
-		i++
-	}
-	return scriptNames, err
-}
-
-func (this *InterceptorInterface) GetJwtKey() []byte {
-	return []byte(this.wsl.Config.Web.JwtKey)
 }
 
 type DefaultInterceptor struct{}
@@ -41,11 +21,11 @@ func (this *DefaultInterceptor) Before(
 	script *string,
 	params map[string]string,
 	headers map[string]string,
-	ii *InterceptorInterface) error {
+	config *Config) error {
 	// log.Println("Default:Before")
 	return nil
 }
-func (this *DefaultInterceptor) After(tx *sql.Tx, result *[]interface{}, ii *InterceptorInterface) error {
+func (this *DefaultInterceptor) After(tx *sql.Tx, result *[]interface{}, config *Config) error {
 	// log.Println("Default:After")
 	return nil
 }
@@ -70,7 +50,7 @@ func RegisterGlobalInterceptors(i Interceptor) {
 // guaranteed to be executed in its list order on each query.
 var globalInterceptors []Interceptor
 
-// querynterceptors is the registry for each named query (qID) of a list of
+// queryInterceptors is the registry for each named query (qID) of a list of
 // Interceptors that is guaranteed to be executed in its list order on each
 // query.
 var queryInterceptors = make(map[string][]Interceptor)

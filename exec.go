@@ -19,12 +19,8 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 		return nil, err
 	}
 
-	ii := &InterceptorInterface{
-		wsl: this,
-	}
-
 	for _, gi := range globalInterceptors {
-		err := gi.Before(tx, &script, params, headers, ii)
+		err := gi.Before(tx, &script, params, headers, this.Config)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -32,14 +28,14 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, li := range queryInterceptors[qID] {
-		err := li.Before(tx, &script, params, headers, ii)
+		err := li.Before(tx, &script, params, headers, this.Config)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
 		}
 	}
 
-	log.Println(script)
+	// log.Println(script)
 	if script != "" {
 		format := params["format"]
 		theCase := params["case"]
@@ -120,7 +116,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, li := range queryInterceptors[qID] {
-		err := li.After(tx, &ret, ii)
+		err := li.After(tx, &ret, this.Config)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -128,7 +124,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, gi := range globalInterceptors {
-		err := gi.After(tx, &ret, ii)
+		err := gi.After(tx, &ret, this.Config)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
