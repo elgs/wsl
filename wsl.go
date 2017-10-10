@@ -80,8 +80,8 @@ func (this *WSL) Start() {
 			return
 		}
 		var bodyData map[string]string
-		json.Unmarshal(body, &bodyData)
 		//intentionally ignore the errors
+		_ = json.Unmarshal(body, &bodyData)
 
 		paramValues, err := url.ParseQuery(r.URL.RawQuery)
 		if err != nil {
@@ -103,7 +103,6 @@ func (this *WSL) Start() {
 		result, err := this.exec(qID, this.db, script, params, headers)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
 			log.Println(err)
 			return
@@ -111,7 +110,6 @@ func (this *WSL) Start() {
 		jsonData, err := json.Marshal(result)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
 			log.Println(err)
 			return

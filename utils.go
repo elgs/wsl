@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"unicode"
 )
 
 func Hook() {
@@ -61,8 +62,16 @@ func valuesToMap(values ...map[string][]string) map[string]string {
 	return ret
 }
 
+// true if the first character is uppercase, false otherwise
+func shouldExport(sql string) bool {
+	if !unicode.IsLetter([]rune(sql)[0]) {
+		return false
+	}
+	return strings.ToUpper(sql[0:1]) == sql[0:1]
+}
+
 // return whether export the result of this sql statement or not
-func sqlNormalize(sql *string) bool {
+func sqlNormalize(sql *string) {
 	*sql = strings.TrimSpace(*sql)
 	var ret string
 	lines := strings.Split(*sql, "\n")
@@ -72,13 +81,7 @@ func sqlNormalize(sql *string) bool {
 			ret += line + "\n"
 		}
 	}
-	if strings.HasPrefix(ret, "!") {
-		*sql = ret[1:]
-		return true
-	} else {
-		*sql = ret
-		return false
-	}
+	*sql = ret
 }
 
 func sqlSafe(s *string) {

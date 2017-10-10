@@ -54,7 +54,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 		sqlParams := extractParamsFromMap(params)
 		totalCount := 0
 		for _, s := range scriptsArray {
-			export := sqlNormalize(&s)
+			sqlNormalize(&s)
 			if len(s) == 0 {
 				continue
 			}
@@ -68,6 +68,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 				return nil, errors.New(fmt.Sprintln("Incorrect param count. Expected: ", totalCount+count, " actual: ", len(sqlParams)))
 			}
 			isQ := isQuery(s)
+			export := shouldExport(s)
 			if isQ {
 				if format == "array" {
 					header, data, err := gosqljson.QueryTxToArray(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
