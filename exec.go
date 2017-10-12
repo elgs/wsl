@@ -65,7 +65,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 			}
 			if len(sqlParams) < totalCount+count {
 				tx.Rollback()
-				return nil, errors.New(fmt.Sprintln("Incorrect param count. Expected: ", totalCount+count, " actual: ", len(sqlParams)))
+				return nil, errors.New(fmt.Sprint("Incorrect param count. Expected: ", totalCount+count, " actual: ", len(sqlParams)))
 			}
 			isQ := isQuery(s)
 			export := shouldExport(s)
