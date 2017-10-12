@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/elgs/gojq"
-	"github.com/elgs/gostrgen"
 )
 
 type ConfigWeb struct {
@@ -18,7 +17,6 @@ type ConfigWeb struct {
 	Cors      bool
 	CertFile  string
 	KeyFile   string
-	JwtKey    string
 }
 
 type ConfigDb struct {
@@ -32,7 +30,6 @@ type ConfigMail struct {
 	MailHost     string
 	MailUsername string
 	MailPassword string
-	MailFrom     string
 }
 
 // Config structure
@@ -94,18 +91,6 @@ func (this *Config) LoadConfig() error {
 		// default
 		this.Web.KeyFile = path.Join(path.Dir(this.ConfFile), "key.pem")
 	}
-
-	v5, err := jqConf.QueryToString("web.jwt_key")
-	if err == nil && len(v5) > 0 {
-		this.Web.JwtKey = v5
-	} else {
-		// default
-		jwtKey, err := gostrgen.RandGen(20, gostrgen.All, "", "")
-		if err != nil {
-			log.Fatal(err)
-		}
-		this.Web.JwtKey = jwtKey
-	}
 	v6, err := jqConf.QueryToString("database.script_path")
 	if err == nil {
 		this.Db.ScriptPath = v6
@@ -135,10 +120,6 @@ func (this *Config) LoadConfig() error {
 	v12, err := jqConf.QueryToString("mail.mail_password")
 	if err == nil {
 		this.Mail.MailPassword = v12
-	}
-	v13, err := jqConf.QueryToString("mail.mail_from")
-	if err == nil {
-		this.Mail.MailFrom = v13
 	}
 	// fmt.Println(this.Web)
 	// fmt.Println(this.Db)

@@ -9,8 +9,8 @@ import (
 // executed. An example would be to provide additional input parameters for
 // the query, or convert the result to other formats.
 type Interceptor interface {
-	Before(tx *sql.Tx, script *string, params map[string]string, headers map[string]string, config *Config) error
-	After(tx *sql.Tx, result *[]interface{}, config *Config) error
+	Before(tx *sql.Tx, script *string, params map[string]string, headers map[string]string, wslApp *WSL) error
+	After(tx *sql.Tx, result *[]interface{}, wslApp *WSL) error
 	OnError(err *error) error
 }
 
@@ -21,11 +21,11 @@ func (this *DefaultInterceptor) Before(
 	script *string,
 	params map[string]string,
 	headers map[string]string,
-	config *Config) error {
+	wslApp *WSL) error {
 	// log.Println("Default:Before")
 	return nil
 }
-func (this *DefaultInterceptor) After(tx *sql.Tx, result *[]interface{}, config *Config) error {
+func (this *DefaultInterceptor) After(tx *sql.Tx, result *[]interface{}, wslApp *WSL) error {
 	// log.Println("Default:After")
 	return nil
 }
