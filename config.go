@@ -20,10 +20,9 @@ type ConfigWeb struct {
 }
 
 type ConfigDb struct {
-	ScriptPath string
-	DbType     string
-	DbUrl      string
-	Scripts    map[string]string
+	DbType  string
+	DbUrl   string
+	Scripts map[string]string
 }
 
 type ConfigMail struct {
@@ -38,6 +37,7 @@ type Config struct {
 	Web      *ConfigWeb
 	Db       *ConfigDb
 	Mail     *ConfigMail
+	App      map[string]interface{}
 }
 
 func (this *Config) httpEnabled() bool {
@@ -91,10 +91,6 @@ func (this *Config) LoadConfig() error {
 		// default
 		this.Web.KeyFile = path.Join(path.Dir(this.ConfFile), "key.pem")
 	}
-	v6, err := jqConf.QueryToString("database.script_path")
-	if err == nil {
-		this.Db.ScriptPath = v6
-	}
 	v7, err := jqConf.QueryToString("database.db_type")
 	if err == nil {
 		this.Db.DbType = v7
@@ -121,19 +117,22 @@ func (this *Config) LoadConfig() error {
 	if err == nil {
 		this.Mail.MailPassword = v12
 	}
+	v13, err := jqConf.QueryToMap("app")
+	if err == nil {
+		this.App = v13
+	}
 	// fmt.Println(this.Web)
 	// fmt.Println(this.Db)
 	// fmt.Println(this.Mail)
+	// fmt.Println(this.App)
 	return nil
 }
 
 func (this *Config) LoadScripts() error {
-	if this.Db.ScriptPath == "" {
-		this.Db.ScriptPath = path.Dir(this.ConfFile)
-	}
+	scriptPath := path.Dir(this.ConfFile)
 	this.Db.Scripts = nil
 	this.Db.Scripts = map[string]string{}
-	err := filepath.Walk(this.Db.ScriptPath, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(scriptPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Println(err)
 		}
