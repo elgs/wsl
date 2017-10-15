@@ -52,7 +52,7 @@ func extractScriptParamsFromMap(m map[string]string) map[string]string {
 	return ret
 }
 
-func valuesToMap(values ...map[string][]string) map[string]string {
+func ValuesToMap(values ...map[string][]string) map[string]string {
 	ret := map[string]string{}
 	for _, vs := range values {
 		for k, v := range vs {

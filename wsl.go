@@ -51,6 +51,7 @@ func (this *WSL) Start() {
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Access-Control-Allow-Methods", r.Header.Get("Access-Control-Request-Method"))
 			w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
+			w.Header().Set("Access-Control-Expose-Headers", "Token")
 		}
 
 		if r.Method == "OPTIONS" {
@@ -91,16 +92,16 @@ func (this *WSL) Start() {
 			log.Println(err)
 			return
 		}
-		params := valuesToMap(paramValues)
+		params := ValuesToMap(paramValues)
 		for k, v := range bodyData {
 			params[k] = v
 		}
 
 		params["__client_ip"] = clientIp
 
-		headers := valuesToMap(r.Header)
+		// headers := valuesToMap(r.Header)
 
-		result, err := this.exec(qID, this.db, script, params, headers)
+		result, err := this.exec(qID, this.db, script, params, w, r)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))

@@ -5,13 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/elgs/gosplitargs"
 	"github.com/elgs/gosqljson"
 )
 
-func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]string, headers map[string]string) ([]interface{}, error) {
+func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]string, w http.ResponseWriter, r *http.Request) ([]interface{}, error) {
 	ret := []interface{}{}
 
 	tx, err := db.Begin()
@@ -20,7 +21,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, gi := range globalInterceptors {
-		err := gi.Before(tx, &script, params, headers, this)
+		err := gi.Before(tx, &script, params, w, r, this)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -28,7 +29,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, li := range queryInterceptors[qID] {
-		err := li.Before(tx, &script, params, headers, this)
+		err := li.Before(tx, &script, params, w, r, this)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -117,7 +118,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, li := range queryInterceptors[qID] {
-		err := li.After(tx, &ret, this)
+		err := li.After(tx, &ret, w, r, this)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -125,7 +126,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, gi := range globalInterceptors {
-		err := gi.After(tx, &ret, this)
+		err := gi.After(tx, &ret, w, r, this)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
