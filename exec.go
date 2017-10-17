@@ -14,6 +14,7 @@ import (
 
 func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]string, w http.ResponseWriter, r *http.Request) ([]interface{}, error) {
 	ret := []interface{}{}
+	context := map[string]interface{}{}
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -21,7 +22,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, gi := range globalInterceptors {
-		err := gi.Before(tx, &script, params, w, r, this)
+		err := gi.Before(tx, &script, params, context, w, r, this)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -29,7 +30,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, li := range queryInterceptors[qID] {
-		err := li.Before(tx, &script, params, w, r, this)
+		err := li.Before(tx, &script, params, context, w, r, this)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -118,7 +119,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, li := range queryInterceptors[qID] {
-		err := li.After(tx, &ret, w, r, this)
+		err := li.After(tx, &ret, context, w, r, this)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -126,7 +127,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, gi := range globalInterceptors {
-		err := gi.After(tx, &ret, w, r, this)
+		err := gi.After(tx, &ret, context, w, r, this)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
