@@ -2,7 +2,6 @@ package wsl
 
 import (
 	"database/sql"
-	"net/http"
 )
 
 // Interceptor provides a chance for application to gain more controls over
@@ -10,10 +9,8 @@ import (
 // executed. An example would be to provide additional input parameters for
 // the query, or convert the result to other formats.
 type Interceptor interface {
-	Before(tx *sql.Tx, script *string, params map[string]string, context map[string]interface{},
-		w http.ResponseWriter, r *http.Request, wslApp *WSL) error
-	After(tx *sql.Tx, result *[]interface{}, context map[string]interface{},
-		w http.ResponseWriter, r *http.Request, wslApp *WSL) error
+	Before(tx *sql.Tx, script *string, params map[string]string, context map[string]interface{}, wslApp *WSL) error
+	After(tx *sql.Tx, result *[]interface{}, context map[string]interface{}, wslApp *WSL) error
 	OnError(err *error) error
 }
 
@@ -24,8 +21,6 @@ func (this *DefaultInterceptor) Before(
 	script *string,
 	params map[string]string,
 	context map[string]interface{},
-	w http.ResponseWriter,
-	r *http.Request,
 	wslApp *WSL) error {
 	// log.Println("Default:Before")
 	return nil
@@ -34,8 +29,6 @@ func (this *DefaultInterceptor) After(
 	tx *sql.Tx,
 	result *[]interface{},
 	context map[string]interface{},
-	w http.ResponseWriter,
-	r *http.Request,
 	wslApp *WSL) error {
 	// log.Println("Default:After")
 	return nil

@@ -94,7 +94,7 @@ func (this *WSL) Start() {
 			log.Println(err)
 			return
 		}
-		params := ValuesToMap(paramValues)
+		params := valuesToMap(paramValues)
 		for k, v := range bodyData {
 			params[k] = v
 		}
@@ -102,14 +102,25 @@ func (this *WSL) Start() {
 		params["__client_ip"] = clientIp
 
 		// headers := valuesToMap(r.Header)
+		context := map[string]interface{}{}
 
-		result, err := this.exec(qID, this.db, script, params, w, r)
+		headers := valuesToMap(r.Header)
+		authHeader := headers["Authorization"]
+		if authHeader != "" {
+			context["Authorization"] = authHeader
+		}
+		result, err := this.exec(qID, this.db, script, params, context)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
 			log.Println(err)
 			return
 		}
+
+		if tokenString, ok := context["token"]; ok {
+			w.Header().Add("token", tokenString.(string))
+		}
+
 		jsonData, err := json.Marshal(result)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
