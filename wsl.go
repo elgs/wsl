@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 type WSL struct {
@@ -118,6 +120,98 @@ func (this *WSL) Start() {
 		jsonString := string(jsonData)
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		fmt.Fprint(w, jsonString)
+	})
+
+	const (
+		// Time allowed to write a message to the peer.
+		writeWait = 10 * time.Second
+
+		// Time allowed to read the next pong message from the peer.
+		pongWait = 60 * time.Second
+
+		// Send pings to peer with this period. Must be less than pongWait.
+		pingPeriod = (pongWait * 9) / 10
+
+		// Maximum message size allowed from peer.
+		// maxMessageSize = 512
+	)
+	var upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin:     func(r *http.Request) bool { return true },
+	}
+
+	var readWs = func(conn *websocket.Conn, m chan []byte) {
+		defer func() {
+			log.Println("read connection closed.")
+			conn.Close()
+		}()
+		// conn.SetReadLimit(maxMessageSize)
+		conn.SetReadDeadline(time.Now().Add(pongWait))
+		conn.SetPongHandler(func(string) error {
+			conn.SetReadDeadline(time.Now().Add(pongWait))
+			log.Println("pong received.")
+			return nil
+		})
+		for {
+			_, message, err := conn.ReadMessage()
+			conn.SetReadDeadline(time.Now().Add(pongWait))
+			if err != nil {
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
+					log.Println(err)
+				}
+				break
+			}
+			m <- message
+			log.Println(string(message))
+		}
+	}
+	var writeWs = func(conn *websocket.Conn, m chan []byte) {
+		defer func() {
+			log.Println("write connection closed.")
+			conn.Close()
+		}()
+		for {
+			select {
+			case message, ok := <-m:
+				conn.SetWriteDeadline(time.Now().Add(writeWait))
+				if !ok {
+					conn.WriteMessage(websocket.CloseMessage, []byte{})
+					return
+				}
+				log.Println("message received.")
+				err := conn.WriteMessage(websocket.TextMessage, message)
+				if err != nil {
+					log.Println(err)
+					break
+				}
+			case <-time.After(pingPeriod):
+				// wait for pingPeriod time of inactivitity, then send a ping, disconnect if pong is not received within writeWait.
+				conn.SetWriteDeadline(time.Now().Add(writeWait))
+				log.Println("ping sent.")
+				if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+					log.Println(err)
+					return
+				}
+			}
+		}
+	}
+
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "OPTIONS" {
+			return
+		}
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, err)
+			log.Println(err)
+			return
+		}
+		log.Println("Connected")
+		m := make(chan []byte)
+		go readWs(conn, m)
+		go writeWs(conn, m)
 	})
 
 	if this.Config.httpEnabled() {
