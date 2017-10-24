@@ -70,6 +70,7 @@ func (this *WSL) Start() {
 		qID := urlPath[1]
 
 		script := this.Config.Db.Scripts[qID]
+
 		sepIndex := strings.LastIndex(r.RemoteAddr, ":")
 		clientIp := r.RemoteAddr[0:sepIndex]
 		clientIp = strings.Replace(strings.Replace(clientIp, "[", "", -1), "]", "", -1)
@@ -101,7 +102,6 @@ func (this *WSL) Start() {
 
 		params["__client_ip"] = clientIp
 
-		// headers := valuesToMap(r.Header)
 		context := map[string]interface{}{}
 
 		headers := valuesToMap(r.Header)
@@ -152,7 +152,7 @@ func (this *WSL) Start() {
 		CheckOrigin:     func(r *http.Request) bool { return true },
 	}
 
-	var readWs = func(conn *websocket.Conn, m chan []byte) {
+	var readWs = func(conn *websocket.Conn, m chan []byte, clientIp string, ins *WSL) {
 		defer func() {
 			log.Println("read connection closed.")
 			conn.Close()
@@ -173,8 +173,56 @@ func (this *WSL) Start() {
 				}
 				break
 			}
-			m <- message
-			log.Println(string(message))
+
+			var input map[string]interface{}
+
+			err = json.Unmarshal(message, &input)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			query := input["query"]
+			if query == nil {
+				log.Println("Invalid query.")
+				return
+			}
+			qID := query.(string)
+			script := this.Config.Db.Scripts[qID]
+
+			params, err := ConvertMapOfInterfacesToMapOfStrings(input["data"].(map[string]interface{}))
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			params["__client_ip"] = clientIp
+
+			context := map[string]interface{}{}
+
+			authHeader := input["Authorization"]
+			if authHeader != nil {
+				context["Authorization"] = authHeader
+			}
+
+			result, err := ins.exec(qID, this.db, script, params, context)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			ret := make(map[string]interface{})
+			ret["data"] = result
+			if tokenString, ok := context["token"]; ok {
+				ret["token"] = tokenString.(string)
+			}
+
+			jsonData, err := json.Marshal(ret)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			m <- jsonData
 		}
 	}
 	var writeWs = func(conn *websocket.Conn, m chan []byte) {
@@ -219,9 +267,16 @@ func (this *WSL) Start() {
 			log.Println(err)
 			return
 		}
+
+		sepIndex := strings.LastIndex(r.RemoteAddr, ":")
+		clientIp := r.RemoteAddr[0:sepIndex]
+		clientIp = strings.Replace(strings.Replace(clientIp, "[", "", -1), "]", "", -1)
+
+		fmt.Println(clientIp)
+
 		log.Println("Connected")
 		m := make(chan []byte)
-		go readWs(conn, m)
+		go readWs(conn, m, clientIp, this)
 		go writeWs(conn, m)
 	})
 
