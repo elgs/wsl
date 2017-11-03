@@ -161,7 +161,7 @@ func (this *WSL) Start() {
 		conn.SetReadDeadline(time.Now().Add(pongWait))
 		conn.SetPongHandler(func(string) error {
 			conn.SetReadDeadline(time.Now().Add(pongWait))
-			log.Println("pong received.")
+			// log.Println("pong received.")
 			return nil
 		})
 		for {
@@ -238,7 +238,7 @@ func (this *WSL) Start() {
 					conn.WriteMessage(websocket.CloseMessage, []byte{})
 					return
 				}
-				log.Println("message received.")
+				// log.Println("message received.")
 				err := conn.WriteMessage(websocket.TextMessage, message)
 				if err != nil {
 					log.Println(err)
@@ -247,7 +247,7 @@ func (this *WSL) Start() {
 			case <-time.After(pingPeriod):
 				// wait for pingPeriod time of inactivitity, then send a ping, disconnect if pong is not received within writeWait.
 				conn.SetWriteDeadline(time.Now().Add(writeWait))
-				log.Println("ping sent.")
+				// log.Println("ping sent.")
 				if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 					log.Println(err)
 					return
@@ -272,9 +272,9 @@ func (this *WSL) Start() {
 		clientIp := r.RemoteAddr[0:sepIndex]
 		clientIp = strings.Replace(strings.Replace(clientIp, "[", "", -1), "]", "", -1)
 
-		fmt.Println(clientIp)
+		// fmt.Println(clientIp)
+		// log.Println("Connected")
 
-		log.Println("Connected")
 		m := make(chan []byte)
 		go readWs(conn, m, clientIp, this)
 		go writeWs(conn, m)
