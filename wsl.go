@@ -42,7 +42,7 @@ func (this *WSL) Start() {
 	}
 
 	http.HandleFunc("/", this.defaultHandler)
-	http.HandleFunc("/ws", this.wsHandler)
+	// http.HandleFunc("/ws", this.wsHandler)
 
 	if this.Config.httpEnabled() {
 		srv := &http.Server{

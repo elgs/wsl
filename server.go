@@ -8,9 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
-
-	"github.com/gorilla/websocket"
 )
 
 func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
@@ -99,151 +96,151 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, jsonString)
 }
 
-const (
-	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
+// const (
+// 	// Time allowed to write a message to the peer.
+// 	writeWait = 10 * time.Second
 
-	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
+// 	// Time allowed to read the next pong message from the peer.
+// 	pongWait = 60 * time.Second
 
-	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10
+// 	// Send pings to peer with this period. Must be less than pongWait.
+// 	pingPeriod = (pongWait * 9) / 10
 
-	// Maximum message size allowed from peer.
-	// maxMessageSize = 512
-)
+// 	// Maximum message size allowed from peer.
+// 	// maxMessageSize = 512
+// )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin:     func(r *http.Request) bool { return true },
-}
+// var upgrader = websocket.Upgrader{
+// 	ReadBufferSize:  1024,
+// 	WriteBufferSize: 1024,
+// 	CheckOrigin:     func(r *http.Request) bool { return true },
+// }
 
-func (this *WSL) readWs(conn *websocket.Conn, m chan []byte, clientIp string, ins *WSL) {
-	defer func() {
-		log.Println("read connection closed.")
-		conn.Close()
-	}()
-	// conn.SetReadLimit(maxMessageSize)
-	conn.SetReadDeadline(time.Now().Add(pongWait))
-	conn.SetPongHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(pongWait))
-		// log.Println("pong received.")
-		return nil
-	})
-	for {
-		_, message, err := conn.ReadMessage()
-		conn.SetReadDeadline(time.Now().Add(pongWait))
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Println(err)
-			}
-			break
-		}
+// func (this *WSL) readWs(conn *websocket.Conn, m chan []byte, clientIp string, ins *WSL) {
+// 	defer func() {
+// 		log.Println("read connection closed.")
+// 		conn.Close()
+// 	}()
+// 	// conn.SetReadLimit(maxMessageSize)
+// 	conn.SetReadDeadline(time.Now().Add(pongWait))
+// 	conn.SetPongHandler(func(string) error {
+// 		conn.SetReadDeadline(time.Now().Add(pongWait))
+// 		// log.Println("pong received.")
+// 		return nil
+// 	})
+// 	for {
+// 		_, message, err := conn.ReadMessage()
+// 		conn.SetReadDeadline(time.Now().Add(pongWait))
+// 		if err != nil {
+// 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
+// 				log.Println(err)
+// 			}
+// 			break
+// 		}
 
-		var input map[string]interface{}
+// 		var input map[string]interface{}
 
-		err = json.Unmarshal(message, &input)
-		if err != nil {
-			log.Println(err)
-			return
-		}
+// 		err = json.Unmarshal(message, &input)
+// 		if err != nil {
+// 			log.Println(err)
+// 			return
+// 		}
 
-		query := input["query"]
-		if query == nil {
-			log.Println("Invalid query.")
-			return
-		}
-		qID := query.(string)
-		script := this.Config.Db.Scripts[qID]
+// 		query := input["query"]
+// 		if query == nil {
+// 			log.Println("Invalid query.")
+// 			return
+// 		}
+// 		qID := query.(string)
+// 		script := this.Config.Db.Scripts[qID]
 
-		params, err := ConvertMapOfInterfacesToMapOfStrings(input["data"].(map[string]interface{}))
-		if err != nil {
-			log.Println(err)
-			return
-		}
+// 		params, err := ConvertMapOfInterfacesToMapOfStrings(input["data"].(map[string]interface{}))
+// 		if err != nil {
+// 			log.Println(err)
+// 			return
+// 		}
 
-		params["__client_ip"] = clientIp
+// 		params["__client_ip"] = clientIp
 
-		context := map[string]interface{}{}
+// 		context := map[string]interface{}{}
 
-		authHeader := input["Authorization"]
-		if authHeader != nil {
-			context["Authorization"] = authHeader
-		}
+// 		authHeader := input["Authorization"]
+// 		if authHeader != nil {
+// 			context["Authorization"] = authHeader
+// 		}
 
-		result, err := ins.exec(qID, this.db, script, params, context)
-		if err != nil {
-			log.Println(err)
-			return
-		}
+// 		result, err := ins.exec(qID, this.db, script, params, context)
+// 		if err != nil {
+// 			log.Println(err)
+// 			return
+// 		}
 
-		ret := make(map[string]interface{})
-		ret["data"] = result
-		if tokenString, ok := context["token"]; ok {
-			ret["token"] = tokenString.(string)
-		}
+// 		ret := make(map[string]interface{})
+// 		ret["data"] = result
+// 		if tokenString, ok := context["token"]; ok {
+// 			ret["token"] = tokenString.(string)
+// 		}
 
-		jsonData, err := json.Marshal(ret)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		m <- jsonData
-	}
-}
+// 		jsonData, err := json.Marshal(ret)
+// 		if err != nil {
+// 			log.Println(err)
+// 			return
+// 		}
+// 		m <- jsonData
+// 	}
+// }
 
-func (this *WSL) writeWs(conn *websocket.Conn, m chan []byte) {
-	defer func() {
-		log.Println("write connection closed.")
-		conn.Close()
-	}()
-	for {
-		select {
-		case message, ok := <-m:
-			conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if !ok {
-				conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
-			// log.Println("message received.")
-			err := conn.WriteMessage(websocket.TextMessage, message)
-			if err != nil {
-				log.Println(err)
-				break
-			}
-		case <-time.After(pingPeriod):
-			// wait for pingPeriod time of inactivitity, then send a ping, disconnect if pong is not received within writeWait.
-			conn.SetWriteDeadline(time.Now().Add(writeWait))
-			// log.Println("ping sent.")
-			if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-				log.Println(err)
-				return
-			}
-		}
-	}
-}
+// func (this *WSL) writeWs(conn *websocket.Conn, m chan []byte) {
+// 	defer func() {
+// 		log.Println("write connection closed.")
+// 		conn.Close()
+// 	}()
+// 	for {
+// 		select {
+// 		case message, ok := <-m:
+// 			conn.SetWriteDeadline(time.Now().Add(writeWait))
+// 			if !ok {
+// 				conn.WriteMessage(websocket.CloseMessage, []byte{})
+// 				return
+// 			}
+// 			// log.Println("message received.")
+// 			err := conn.WriteMessage(websocket.TextMessage, message)
+// 			if err != nil {
+// 				log.Println(err)
+// 				break
+// 			}
+// 		case <-time.After(pingPeriod):
+// 			// wait for pingPeriod time of inactivitity, then send a ping, disconnect if pong is not received within writeWait.
+// 			conn.SetWriteDeadline(time.Now().Add(writeWait))
+// 			// log.Println("ping sent.")
+// 			if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+// 				log.Println(err)
+// 				return
+// 			}
+// 		}
+// 	}
+// }
 
-func (this *WSL) wsHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "OPTIONS" {
-		return
-	}
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, err)
-		log.Println(err)
-		return
-	}
+// func (this *WSL) wsHandler(w http.ResponseWriter, r *http.Request) {
+// 	if r.Method == "OPTIONS" {
+// 		return
+// 	}
+// 	conn, err := upgrader.Upgrade(w, r, nil)
+// 	if err != nil {
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		fmt.Fprint(w, err)
+// 		log.Println(err)
+// 		return
+// 	}
 
-	sepIndex := strings.LastIndex(r.RemoteAddr, ":")
-	clientIp := r.RemoteAddr[0:sepIndex]
-	clientIp = strings.Replace(strings.Replace(clientIp, "[", "", -1), "]", "", -1)
+// 	sepIndex := strings.LastIndex(r.RemoteAddr, ":")
+// 	clientIp := r.RemoteAddr[0:sepIndex]
+// 	clientIp = strings.Replace(strings.Replace(clientIp, "[", "", -1), "]", "", -1)
 
-	// fmt.Println(clientIp)
-	// log.Println("Connected")
+// 	// fmt.Println(clientIp)
+// 	// log.Println("Connected")
 
-	m := make(chan []byte)
-	go this.readWs(conn, m, clientIp, this)
-	go this.writeWs(conn, m)
-}
+// 	m := make(chan []byte)
+// 	go this.readWs(conn, m, clientIp, this)
+// 	go this.writeWs(conn, m)
+// }

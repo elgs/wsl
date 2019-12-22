@@ -40,6 +40,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 		format := params["format"]
 		theCase := params["case"]
 
+		// double underscore
 		scriptParams := extractScriptParamsFromMap(params)
 		for k, v := range scriptParams {
 			script = strings.Replace(script, k, v, -1)
@@ -51,6 +52,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 			return nil, err
 		}
 
+		// single underscore
 		sqlParams := extractParamsFromMap(params)
 		totalCount := 0
 		for _, s := range scriptsArray {
@@ -65,7 +67,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 			}
 			if len(sqlParams) < totalCount+count {
 				tx.Rollback()
-				return nil, errors.New(fmt.Sprint("Incorrect param count. Expected: ", totalCount+count, " actual: ", len(sqlParams)))
+				return nil, errors.New(fmt.Sprint(s, "Incorrect param count. Expected: ", totalCount+count, " actual: ", len(sqlParams)))
 			}
 			isQ := isQuery(s)
 			export := shouldExport(s)
