@@ -69,9 +69,8 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 				tx.Rollback()
 				return nil, errors.New(fmt.Sprint(s, "Incorrect param count. Expected: ", totalCount+count, " actual: ", len(sqlParams)))
 			}
-			isQ := isQuery(s)
 			export := shouldExport(s)
-			if isQ {
+			if isQuery(s) {
 				if format == "array" {
 					header, data, err := gosqljson.QueryTxToArray(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
 					data = append([][]string{header}, data...)

@@ -38,11 +38,11 @@ func (this *DefaultInterceptor) OnError(err *error) error {
 	return *err
 }
 
-func RegisterQueryInterceptors(qID string, i Interceptor) {
-	if _, ok := queryInterceptors[qID]; ok {
-		queryInterceptors[qID] = append(queryInterceptors[qID], i)
+func RegisterQueryInterceptors(queryId string, i Interceptor) {
+	if _, ok := queryInterceptors[queryId]; ok {
+		queryInterceptors[queryId] = append(queryInterceptors[queryId], i)
 	} else {
-		queryInterceptors[qID] = []Interceptor{i}
+		queryInterceptors[queryId] = []Interceptor{i}
 	}
 }
 
