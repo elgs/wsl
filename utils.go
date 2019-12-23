@@ -33,7 +33,7 @@ func Hook() {
 func extractParamsFromMap(m map[string]string) []interface{} {
 	ret := []interface{}{}
 	for i := 0; ; i++ {
-		if val, ok := m[fmt.Sprint("$", i)]; ok {
+		if val, ok := m[fmt.Sprint("_", i)]; ok {
 			ret = append(ret, val)
 		} else {
 			break
