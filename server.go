@@ -63,7 +63,7 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		params[k] = v
 	}
 
-	params["__client_ip"] = clientIp
+	params["$$client_ip"] = clientIp
 
 	context := map[string]interface{}{}
 
