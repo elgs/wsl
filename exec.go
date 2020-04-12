@@ -11,8 +11,8 @@ import (
 	"github.com/elgs/gosqljson"
 )
 
-func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]string, context map[string]interface{}) ([]interface{}, error) {
-	ret := []interface{}{}
+func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]string, context map[string]interface{}) (map[string]interface{}, error) {
+	queryResult := []interface{}{}
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -83,7 +83,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 						return nil, err
 					}
 					if export {
-						ret = append(ret, data)
+						queryResult = append(queryResult, data)
 					}
 				} else {
 					data, err := gosqljson.QueryTxToMap(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
@@ -96,7 +96,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 						return nil, err
 					}
 					if export {
-						ret = append(ret, data)
+						queryResult = append(queryResult, data)
 					}
 				}
 			} else {
@@ -110,15 +110,19 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 					return nil, err
 				}
 				if export {
-					ret = append(ret, rowsAffected)
+					queryResult = append(queryResult, rowsAffected)
 				}
 			}
 			totalCount += count
 		}
 	}
 
+	result := map[string]interface{}{
+		"data": queryResult,
+	}
+
 	for _, li := range queryInterceptors[qID] {
-		err := li.After(tx, &ret, context, this)
+		err := li.After(tx, result, context, this)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -126,7 +130,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, gi := range globalInterceptors {
-		err := gi.After(tx, &ret, context, this)
+		err := gi.After(tx, result, context, this)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -134,7 +138,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	tx.Commit()
-	return ret, nil
+	return result, nil
 }
 
 func (this *WSL) interceptError(qID string, err *error) error {

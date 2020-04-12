@@ -80,9 +80,9 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if tokenString, ok := context["token"]; ok {
-		w.Header().Add("token", tokenString.(string))
-	}
+	// if tokenString, ok := context["token"]; ok {
+	// 	w.Header().Add("token", tokenString.(string))
+	// }
 
 	jsonData, err := json.Marshal(result)
 	if err != nil {

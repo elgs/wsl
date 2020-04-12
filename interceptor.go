@@ -4,13 +4,13 @@ import (
 	"database/sql"
 )
 
-// Interceptor provides a chance for application to gain more controls over
+// Interceptor provides a chance for applications to gain more controls over
 // the parameters before, the result after, and the error when the query is
 // executed. An example would be to provide additional input parameters for
 // the query, or convert the result to other formats.
 type Interceptor interface {
 	Before(tx *sql.Tx, script *string, params map[string]string, context map[string]interface{}, wslApp *WSL) error
-	After(tx *sql.Tx, result *[]interface{}, context map[string]interface{}, wslApp *WSL) error
+	After(tx *sql.Tx, result map[string]interface{}, context map[string]interface{}, wslApp *WSL) error
 	OnError(err *error) error
 }
 
@@ -27,7 +27,7 @@ func (this *DefaultInterceptor) Before(
 }
 func (this *DefaultInterceptor) After(
 	tx *sql.Tx,
-	result *[]interface{},
+	result map[string]interface{},
 	context map[string]interface{},
 	wslApp *WSL) error {
 	// log.Println("Default:After")
