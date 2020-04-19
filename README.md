@@ -114,8 +114,8 @@ will output:
 
 ### Script Parameters
 
-#### $$client_ip
-Any occurence of `$$client_ip` in the SQL scripts will be replaced with the client IP address.
+#### __client_ip
+Any occurence of `__client_ip` in the SQL scripts will be replaced with the client IP address.
 
 ## Advanced
 

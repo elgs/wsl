@@ -63,14 +63,14 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		params[k] = v
 	}
 
-	params["$$client_ip"] = clientIp
+	params["__client_ip"] = clientIp
 
 	context := map[string]interface{}{}
 
 	headers := valuesToMap(r.Header)
-	authHeader := headers["Authorization"]
+	authHeader := headers["access_token"]
 	if authHeader != "" {
-		context["Authorization"] = authHeader
+		context["access_token"] = authHeader
 	}
 	result, err := this.exec(qID, this.db, script, params, context)
 	if err != nil {
@@ -164,9 +164,9 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 // 		context := map[string]interface{}{}
 
-// 		authHeader := input["Authorization"]
+// 		authHeader := input["access_token"]
 // 		if authHeader != nil {
-// 			context["Authorization"] = authHeader
+// 			context["access_token"] = authHeader
 // 		}
 
 // 		result, err := ins.exec(qID, this.db, script, params, context)

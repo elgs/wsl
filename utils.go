@@ -33,7 +33,7 @@ func Hook() {
 func extractParamsFromMap(m map[string]string) []interface{} {
 	ret := []interface{}{}
 	for i := 0; ; i++ {
-		if val, ok := m[fmt.Sprint("$", i)]; ok {
+		if val, ok := m[fmt.Sprint("_", i)]; ok {
 			ret = append(ret, val)
 		} else {
 			break
@@ -45,7 +45,7 @@ func extractParamsFromMap(m map[string]string) []interface{} {
 func extractScriptParamsFromMap(m map[string]string) map[string]string {
 	ret := map[string]string{}
 	for k, v := range m {
-		if strings.HasPrefix(k, "$$") {
+		if strings.HasPrefix(k, "__") {
 			sqlSafe(&v)
 			ret[k] = v
 		}
