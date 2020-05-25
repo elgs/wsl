@@ -58,7 +58,7 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	params := valuesToMap(paramValues)
+	params := valuesToMap(false, paramValues)
 	for k, v := range bodyData {
 		params[k] = v
 	}
@@ -67,8 +67,13 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 	context := map[string]interface{}{}
 
-	headers := valuesToMap(r.Header)
+	headers := valuesToMap(true, r.Header)
 	authHeader := headers["access_token"]
+
+	if authHeader == "" {
+		authHeader = params["access_token"]
+	}
+
 	if authHeader != "" {
 		context["access_token"] = authHeader
 	}
@@ -79,10 +84,6 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-
-	// if tokenString, ok := context["token"]; ok {
-	// 	w.Header().Add("token", tokenString.(string))
-	// }
 
 	jsonData, err := json.Marshal(result)
 	if err != nil {
