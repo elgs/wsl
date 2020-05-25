@@ -122,7 +122,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, li := range queryInterceptors[qID] {
-		err := li.After(tx, result, context, this)
+		err := li.After(tx, params, result, context, this)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -130,7 +130,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, gi := range globalInterceptors {
-		err := gi.After(tx, result, context, this)
+		err := gi.After(tx, params, result, context, this)
 		if err != nil {
 			tx.Rollback()
 			return nil, err

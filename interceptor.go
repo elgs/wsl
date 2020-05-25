@@ -10,7 +10,7 @@ import (
 // the query, or convert the result to other formats.
 type Interceptor interface {
 	Before(tx *sql.Tx, script *string, params map[string]string, context map[string]interface{}, wslApp *WSL) error
-	After(tx *sql.Tx, result map[string]interface{}, context map[string]interface{}, wslApp *WSL) error
+	After(tx *sql.Tx, params map[string]string, result map[string]interface{}, context map[string]interface{}, wslApp *WSL) error
 	OnError(err *error) error
 }
 
@@ -27,6 +27,7 @@ func (this *DefaultInterceptor) Before(
 }
 func (this *DefaultInterceptor) After(
 	tx *sql.Tx,
+	params map[string]string,
 	result map[string]interface{},
 	context map[string]interface{},
 	wslApp *WSL) error {
@@ -38,16 +39,20 @@ func (this *DefaultInterceptor) OnError(err *error) error {
 	return *err
 }
 
-func RegisterQueryInterceptors(queryId string, i Interceptor) {
-	if _, ok := queryInterceptors[queryId]; ok {
-		queryInterceptors[queryId] = append(queryInterceptors[queryId], i)
-	} else {
-		queryInterceptors[queryId] = []Interceptor{i}
+func RegisterQueryInterceptors(queryId string, is ...Interceptor) {
+	for _, i := range is {
+		if _, ok := queryInterceptors[queryId]; ok {
+			queryInterceptors[queryId] = append(queryInterceptors[queryId], i)
+		} else {
+			queryInterceptors[queryId] = []Interceptor{i}
+		}
 	}
 }
 
-func RegisterGlobalInterceptors(i Interceptor) {
-	globalInterceptors = append(globalInterceptors, i)
+func RegisterGlobalInterceptors(is ...Interceptor) {
+	for _, i := range is {
+		globalInterceptors = append(globalInterceptors, i)
+	}
 }
 
 // globalInterceptors is the registry of a list of Interceptors that is
