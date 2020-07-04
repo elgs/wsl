@@ -55,7 +55,8 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 		// single underscore
 		sqlParams := extractParamsFromMap(params)
 		totalCount := 0
-		for _, s := range scriptsArray {
+		for index, s := range scriptsArray {
+
 			sqlNormalize(&s)
 			if len(s) == 0 {
 				continue
@@ -69,6 +70,15 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 				tx.Rollback()
 				return nil, errors.New(fmt.Sprint(s, "Incorrect param count. Expected: ", totalCount+count, " actual: ", len(sqlParams)))
 			}
+
+			for _, li := range queryInterceptors[qID] {
+				err := li.BeforeEach(tx, &s, params, context, index, this)
+				if err != nil {
+					tx.Rollback()
+					return nil, err
+				}
+			}
+
 			export := shouldExport(s)
 			if isQuery(s) {
 				if format == "array" {
@@ -114,6 +124,14 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 				}
 			}
 			totalCount += count
+
+			for index, li := range queryInterceptors[qID] {
+				err := li.AfterEach(tx, params, queryResult, context, index, this)
+				if err != nil {
+					tx.Rollback()
+					return nil, err
+				}
+			}
 		}
 	}
 

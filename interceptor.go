@@ -9,34 +9,43 @@ import (
 // executed. An example would be to provide additional input parameters for
 // the query, or convert the result to other formats.
 type Interceptor interface {
-	Before(tx *sql.Tx, script *string, params map[string]string, context map[string]interface{}, wslApp *WSL) error
+	Before(tx *sql.Tx, scripts *string, params map[string]string, context map[string]interface{}, wslApp *WSL) error
+	BeforeEach(tx *sql.Tx, script *string, params map[string]string, context map[string]interface{}, scriptIndex int, wslApp *WSL) error
+	AfterEach(tx *sql.Tx, params map[string]string, result interface{}, context map[string]interface{}, scriptIndex int, wslApp *WSL) error
 	After(tx *sql.Tx, params map[string]string, result interface{}, context map[string]interface{}, wslApp *WSL) error
 	OnError(err *error) error
 }
 
 type DefaultInterceptor struct{}
 
-func (this *DefaultInterceptor) Before(
+func (this *DefaultInterceptor) Before(tx *sql.Tx, scripts *string, params map[string]string, context map[string]interface{}, wslApp *WSL) error {
+	params["case"] = "lower"
+	return nil
+}
+
+func (this *DefaultInterceptor) After(tx *sql.Tx, params map[string]string, result interface{}, context map[string]interface{}, wslApp *WSL) error {
+	return nil
+}
+
+func (this *DefaultInterceptor) BeforeEach(
 	tx *sql.Tx,
 	script *string,
 	params map[string]string,
 	context map[string]interface{},
+	scriptIndex int,
 	wslApp *WSL) error {
-	// log.Println("Default:Before")
-	params["case"] = "lower"
 	return nil
 }
-func (this *DefaultInterceptor) After(
+func (this *DefaultInterceptor) AfterEach(
 	tx *sql.Tx,
 	params map[string]string,
 	result interface{},
 	context map[string]interface{},
+	scriptIndex int,
 	wslApp *WSL) error {
-	// log.Println("Default:After")
 	return nil
 }
 func (this *DefaultInterceptor) OnError(err *error) error {
-	// log.Println("Default:Error")
 	return *err
 }
 
