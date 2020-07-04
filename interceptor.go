@@ -10,7 +10,7 @@ import (
 // the query, or convert the result to other formats.
 type Interceptor interface {
 	Before(tx *sql.Tx, script *string, params map[string]string, context map[string]interface{}, wslApp *WSL) error
-	After(tx *sql.Tx, params map[string]string, result map[string]interface{}, context map[string]interface{}, wslApp *WSL) error
+	After(tx *sql.Tx, params map[string]string, result interface{}, context map[string]interface{}, wslApp *WSL) error
 	OnError(err *error) error
 }
 
@@ -23,12 +23,13 @@ func (this *DefaultInterceptor) Before(
 	context map[string]interface{},
 	wslApp *WSL) error {
 	// log.Println("Default:Before")
+	params["case"] = "lower"
 	return nil
 }
 func (this *DefaultInterceptor) After(
 	tx *sql.Tx,
 	params map[string]string,
-	result map[string]interface{},
+	result interface{},
 	context map[string]interface{},
 	wslApp *WSL) error {
 	// log.Println("Default:After")

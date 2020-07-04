@@ -11,7 +11,7 @@ import (
 	"github.com/elgs/gosqljson"
 )
 
-func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]string, context map[string]interface{}) (map[string]interface{}, error) {
+func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]string, context map[string]interface{}) (interface{}, error) {
 	queryResult := []interface{}{}
 
 	tx, err := db.Begin()
@@ -117,8 +117,13 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 		}
 	}
 
-	result := map[string]interface{}{
-		"data": queryResult,
+	var result interface{}
+	if len(queryResult) == 0 {
+		result = []interface{}{}
+	} else if len(queryResult) == 1 {
+		result = queryResult[0]
+	} else {
+		result = queryResult
 	}
 
 	for _, li := range queryInterceptors[qID] {

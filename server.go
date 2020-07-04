@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 )
 
@@ -32,6 +33,9 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	qID := urlPath[1]
 
+	if os.Getenv("env") == "dev" {
+		this.Config.LoadScripts(qID)
+	}
 	script := this.Config.Db.Scripts[qID]
 
 	sepIndex := strings.LastIndex(r.RemoteAddr, ":")

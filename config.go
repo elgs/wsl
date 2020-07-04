@@ -1,6 +1,7 @@
 package wsl
 
 import (
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -60,7 +61,7 @@ func NewConfig(confFile string) (*Config, error) {
 	if err != nil {
 		return config, err
 	}
-	err = config.LoadScripts()
+	err = config.LoadScripts("")
 	return config, err
 }
 
@@ -128,11 +129,12 @@ func (this *Config) LoadConfig() error {
 	return nil
 }
 
-func (this *Config) LoadScripts() error {
+func (this *Config) LoadScripts(scriptName string) error {
 	scriptPath := path.Dir(this.ConfFile)
 	this.Db.Scripts = nil
 	this.Db.Scripts = map[string]string{}
-	err := filepath.Walk(scriptPath, func(path string, info os.FileInfo, err error) error {
+
+	return filepath.Walk(scriptPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Println(err)
 		}
@@ -141,10 +143,12 @@ func (this *Config) LoadScripts() error {
 			if err != nil {
 				log.Println(err)
 			}
-			scriptName := strings.TrimSuffix(strings.ToLower(info.Name()), ".sql")
+			scriptName := strings.TrimSuffix(info.Name(), ".sql")
 			this.Db.Scripts[scriptName] = string(data)
+			if info.Name() == scriptName {
+				return io.EOF
+			}
 		}
 		return nil
 	})
-	return err
 }
