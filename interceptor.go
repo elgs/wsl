@@ -10,7 +10,7 @@ import (
 // the query, or convert the result to other formats.
 type Interceptor interface {
 	Before(tx *sql.Tx, scripts *string, params map[string]string, context map[string]interface{}, wslApp *WSL) error
-	BeforeEach(tx *sql.Tx, script *string, params map[string]string, context map[string]interface{}, scriptIndex int, wslApp *WSL) error
+	BeforeEach(tx *sql.Tx, script *string, sqlParams []interface{}, context map[string]interface{}, scriptIndex int, wslApp *WSL) error
 	AfterEach(tx *sql.Tx, params map[string]string, result interface{}, context map[string]interface{}, scriptIndex int, wslApp *WSL) error
 	After(tx *sql.Tx, params map[string]string, result interface{}, context map[string]interface{}, wslApp *WSL) error
 	OnError(err *error) error
@@ -30,7 +30,7 @@ func (this *DefaultInterceptor) After(tx *sql.Tx, params map[string]string, resu
 func (this *DefaultInterceptor) BeforeEach(
 	tx *sql.Tx,
 	script *string,
-	params map[string]string,
+	params []interface{},
 	context map[string]interface{},
 	scriptIndex int,
 	wslApp *WSL) error {

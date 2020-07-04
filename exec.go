@@ -72,7 +72,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 			}
 
 			for _, li := range queryInterceptors[qID] {
-				err := li.BeforeEach(tx, &s, params, context, index, this)
+				err := li.BeforeEach(tx, &s, sqlParams[totalCount:totalCount+count], context, index, this)
 				if err != nil {
 					tx.Rollback()
 					return nil, err
