@@ -9,8 +9,8 @@ import (
 )
 
 type WSL struct {
-	Config *Config
-	db     *sql.DB
+	Config    *Config
+	databases map[string]*sql.DB
 }
 
 func New(confFile string) (*WSL, error) {
@@ -19,23 +19,25 @@ func New(confFile string) (*WSL, error) {
 		return nil, err
 	}
 	return &WSL{
-		Config: config,
+		Config:    config,
+		databases: map[string]*sql.DB{},
 	}, nil
 }
 
-func (this *WSL) connectToDb() error {
-	if this.db == nil {
-		db, err := sql.Open(this.Config.Db.DbType, this.Config.Db.DbUrl)
+func (this *WSL) connectToDb(dbName string) error {
+	if this.databases[dbName] == nil {
+		dbData := this.Config.Databases[dbName].(map[string]interface{})
+		db, err := sql.Open(dbData["db_type"].(string), dbData["db_url"].(string))
 		if err != nil {
 			return err
 		}
-		this.db = db
+		this.databases[dbName] = db
 	}
 	return nil
 }
 
 func (this *WSL) Start() {
-	err := this.connectToDb()
+	err := this.connectToDb("main")
 	if err != nil {
 		log.Println(err)
 		return

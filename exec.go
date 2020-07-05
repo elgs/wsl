@@ -71,12 +71,20 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 				return nil, errors.New(fmt.Sprint(s, "Incorrect param count. Expected: ", totalCount+count, " actual: ", len(sqlParams)))
 			}
 
+			skipNext := false
 			for _, li := range queryInterceptors[qID] {
-				err := li.BeforeEach(tx, &s, sqlParams[totalCount:totalCount+count], context, index, this)
+				skip, err := li.BeforeEach(tx, &s, sqlParams[totalCount:totalCount+count], context, index, this)
 				if err != nil {
 					tx.Rollback()
 					return nil, err
 				}
+				if skip == true {
+					skipNext = true
+				}
+			}
+
+			if skipNext {
+				continue
 			}
 
 			export := shouldExport(s)

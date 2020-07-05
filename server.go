@@ -36,7 +36,7 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	if os.Getenv("env") == "dev" {
 		this.Config.LoadScripts(qID)
 	}
-	script := this.Config.Db.Scripts[qID]
+	script := this.Config.App["scripts"].(map[string]string)[qID]
 
 	sepIndex := strings.LastIndex(r.RemoteAddr, ":")
 	clientIp := r.RemoteAddr[0:sepIndex]
@@ -81,7 +81,7 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	if authHeader != "" {
 		context["access_token"] = authHeader
 	}
-	result, err := this.exec(qID, this.db, script, params, context)
+	result, err := this.exec(qID, this.databases["main"], script, params, context)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))

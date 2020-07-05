@@ -20,25 +20,20 @@ type ConfigWeb struct {
 	KeyFile   string
 }
 
-type ConfigDb struct {
-	DbType  string
-	DbUrl   string
-	Scripts map[string]string
-}
-
 type ConfigMail struct {
 	MailHost     string
 	MailUsername string
 	MailPassword string
+	MailFrom     string
 }
 
 // Config structure
 type Config struct {
-	ConfFile string
-	Web      *ConfigWeb
-	Db       *ConfigDb
-	Mail     *ConfigMail
-	App      map[string]interface{}
+	ConfFile  string
+	Web       *ConfigWeb
+	Databases map[string]interface{}
+	Mail      *ConfigMail
+	App       map[string]interface{}
 }
 
 func (this *Config) httpEnabled() bool {
@@ -51,12 +46,13 @@ func (this *Config) httpsEnabled() bool {
 
 func NewConfig(confFile string) (*Config, error) {
 	config := &Config{
-		ConfFile: confFile,
-		Web:      &ConfigWeb{},
-		Db:       &ConfigDb{},
-		Mail:     &ConfigMail{},
+		ConfFile:  confFile,
+		Web:       &ConfigWeb{},
+		Databases: map[string]interface{}{},
+		Mail:      &ConfigMail{},
+		App:       map[string]interface{}{},
 	}
-	config.Db.Scripts = make(map[string]string)
+	config.App["scripts"] = make(map[string]interface{})
 	err := config.LoadConfig()
 	if err != nil {
 		return config, err
@@ -92,35 +88,31 @@ func (this *Config) LoadConfig() error {
 		// default
 		this.Web.KeyFile = path.Join(path.Dir(this.ConfFile), "key.pem")
 	}
-	v7, err := jqConf.QueryToString("database.db_type")
+	v7, err := jqConf.QueryToMap("databases")
 	if err == nil {
-		this.Db.DbType = v7
+		this.Databases = v7
 	}
-	v8, err := jqConf.QueryToString("database.db_url")
+	v8, err := jqConf.QueryToBool("web.cors")
 	if err == nil {
-		this.Db.DbUrl = v8
-	}
-	v9, err := jqConf.QueryToBool("web.cors")
-	if err == nil {
-		this.Web.Cors = v9
+		this.Web.Cors = v8
 	} else {
 		this.Web.Cors = false
 	}
-	v10, err := jqConf.QueryToString("mail.mail_host")
+	v9, err := jqConf.QueryToString("mail.mail_host")
 	if err == nil {
-		this.Mail.MailHost = v10
+		this.Mail.MailHost = v9
 	}
-	v11, err := jqConf.QueryToString("mail.mail_username")
+	v10, err := jqConf.QueryToString("mail.mail_username")
 	if err == nil {
-		this.Mail.MailUsername = v11
+		this.Mail.MailUsername = v10
 	}
-	v12, err := jqConf.QueryToString("mail.mail_password")
+	v11, err := jqConf.QueryToString("mail.mail_password")
 	if err == nil {
-		this.Mail.MailPassword = v12
+		this.Mail.MailPassword = v11
 	}
-	v13, err := jqConf.QueryToMap("app")
+	v12, err := jqConf.QueryToMap("app")
 	if err == nil {
-		this.App = v13
+		this.App = v12
 	}
 	// fmt.Println(this.Web)
 	// fmt.Println(this.Db)
@@ -131,8 +123,7 @@ func (this *Config) LoadConfig() error {
 
 func (this *Config) LoadScripts(scriptName string) error {
 	scriptPath := path.Dir(this.ConfFile)
-	this.Db.Scripts = nil
-	this.Db.Scripts = map[string]string{}
+	this.App["scripts"] = map[string]string{}
 
 	return filepath.Walk(scriptPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -144,7 +135,7 @@ func (this *Config) LoadScripts(scriptName string) error {
 				log.Println(err)
 			}
 			scriptName := strings.TrimSuffix(info.Name(), ".sql")
-			this.Db.Scripts[scriptName] = string(data)
+			this.App["scripts"].(map[string]string)[scriptName] = string(data)
 			if info.Name() == scriptName {
 				return io.EOF
 			}
