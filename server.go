@@ -50,7 +50,7 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	var bodyData map[string]string
+	var bodyData map[string]interface{}
 	//intentionally ignore the errors
 	_ = json.Unmarshal(body, &bodyData)
 

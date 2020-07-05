@@ -30,7 +30,10 @@ func Hook() {
 	fmt.Println("Bye!")
 }
 
-func extractParamsFromMap(m map[string]string) []interface{} {
+func extractParamsFromMap(m map[string]interface{}) []interface{} {
+	if params, ok := m["params"].([]interface{}); ok {
+		return params
+	}
 	ret := []interface{}{}
 	for i := 0; ; i++ {
 		if val, ok := m[fmt.Sprint("_", i)]; ok {
@@ -42,19 +45,20 @@ func extractParamsFromMap(m map[string]string) []interface{} {
 	return ret
 }
 
-func extractScriptParamsFromMap(m map[string]string) map[string]string {
-	ret := map[string]string{}
+func extractScriptParamsFromMap(m map[string]interface{}) map[string]interface{} {
+	ret := map[string]interface{}{}
 	for k, v := range m {
 		if strings.HasPrefix(k, "__") {
-			sqlSafe(&v)
+			vs := v.(string)
+			sqlSafe(&vs)
 			ret[k] = v
 		}
 	}
 	return ret
 }
 
-func valuesToMap(keyLowerCase bool, values ...map[string][]string) map[string]string {
-	ret := map[string]string{}
+func valuesToMap(keyLowerCase bool, values ...map[string][]string) map[string]interface{} {
+	ret := map[string]interface{}{}
 	for _, vs := range values {
 		for k, v := range vs {
 			if keyLowerCase {

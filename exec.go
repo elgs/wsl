@@ -11,7 +11,12 @@ import (
 	"github.com/elgs/gosqljson"
 )
 
-func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]string, context map[string]interface{}) (interface{}, error) {
+func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]interface{}, context map[string]interface{}) (interface{}, error) {
+
+	context["scripts"] = &scripts
+	context["params"] = params
+	context["app"] = this
+
 	queryResult := []interface{}{}
 
 	tx, err := db.Begin()
@@ -20,7 +25,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, gi := range globalInterceptors {
-		err := gi.Before(tx, &script, params, context, this)
+		err := gi.Before(tx, context)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -28,7 +33,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, li := range queryInterceptors[qID] {
-		err := li.Before(tx, &script, params, context, this)
+		err := li.Before(tx, context)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -36,17 +41,23 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	// log.Println(script)
-	if script != "" {
-		format := params["format"]
-		theCase := params["case"]
+	if scripts != "" {
+		format := ""
+		theCase := ""
+		if v, ok := params["format"].(string); ok {
+			format = v
+		}
+		if v, ok := params["case"].(string); ok {
+			theCase = v
+		}
 
 		// double underscore
 		scriptParams := extractScriptParamsFromMap(params)
 		for k, v := range scriptParams {
-			script = strings.Replace(script, k, v, -1)
+			scripts = strings.Replace(scripts, k, v.(string), -1)
 		}
 
-		scriptsArray, err := gosplitargs.SplitArgs(script, ";", true)
+		scriptsArray, err := gosplitargs.SplitArgs(scripts, ";", true)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -74,7 +85,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 
 			skipSql := false
 			for _, li := range queryInterceptors[qID] {
-				skip, err := li.BeforeEach(tx, &s, sqlParams[totalCount-count:totalCount], context, index, this)
+				skip, err := li.BeforeEach(tx, context, &s, sqlParams[totalCount-count:totalCount], index)
 				if err != nil {
 					tx.Rollback()
 					return nil, err
@@ -134,7 +145,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 			}
 
 			for index, li := range queryInterceptors[qID] {
-				err := li.AfterEach(tx, params, queryResult, context, index, this)
+				err := li.AfterEach(tx, context, queryResult, index)
 				if err != nil {
 					tx.Rollback()
 					return nil, err
@@ -143,17 +154,17 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 		}
 	}
 
-	var result interface{}
+	var results interface{}
 	if len(queryResult) == 0 {
-		result = []interface{}{}
+		results = []interface{}{}
 	} else if len(queryResult) == 1 {
-		result = queryResult[0]
+		results = queryResult[0]
 	} else {
-		result = queryResult
+		results = queryResult
 	}
 
 	for _, li := range queryInterceptors[qID] {
-		err := li.After(tx, params, result, context, this)
+		err := li.After(tx, context, results)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -161,7 +172,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	for _, gi := range globalInterceptors {
-		err := gi.After(tx, params, result, context, this)
+		err := gi.After(tx, context, results)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -169,7 +180,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 	}
 
 	tx.Commit()
-	return result, nil
+	return results, nil
 }
 
 func (this *WSL) interceptError(qID string, err *error) error {

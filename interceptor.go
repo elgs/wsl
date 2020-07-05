@@ -9,42 +9,33 @@ import (
 // executed. An example would be to provide additional input parameters for
 // the query, or convert the result to other formats.
 type Interceptor interface {
-	Before(tx *sql.Tx, scripts *string, params map[string]string, context map[string]interface{}, wslApp *WSL) error
-	BeforeEach(tx *sql.Tx, script *string, sqlParams []interface{}, context map[string]interface{}, scriptIndex int, wslApp *WSL) (bool, error)
-	AfterEach(tx *sql.Tx, params map[string]string, result interface{}, context map[string]interface{}, scriptIndex int, wslApp *WSL) error
-	After(tx *sql.Tx, params map[string]string, result interface{}, context map[string]interface{}, wslApp *WSL) error
+	Before(tx *sql.Tx, context map[string]interface{}) error
+	BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int) (bool, error)
+	AfterEach(tx *sql.Tx, context map[string]interface{}, result interface{}, scriptIndex int) error
+	After(tx *sql.Tx, context map[string]interface{}, results interface{}) error
 	OnError(err *error) error
 }
 
 type DefaultInterceptor struct{}
 
-func (this *DefaultInterceptor) Before(tx *sql.Tx, scripts *string, params map[string]string, context map[string]interface{}, wslApp *WSL) error {
+func (this *DefaultInterceptor) Before(tx *sql.Tx, context map[string]interface{}) error {
+	params := context["params"].(map[string]interface{})
 	params["case"] = "lower"
 	return nil
 }
 
-func (this *DefaultInterceptor) After(tx *sql.Tx, params map[string]string, result interface{}, context map[string]interface{}, wslApp *WSL) error {
+func (this *DefaultInterceptor) After(tx *sql.Tx, context map[string]interface{}, results interface{}) error {
 	return nil
 }
 
-func (this *DefaultInterceptor) BeforeEach(
-	tx *sql.Tx,
-	script *string,
-	params []interface{},
-	context map[string]interface{},
-	scriptIndex int,
-	wslApp *WSL) (bool, error) {
+func (this *DefaultInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int) (bool, error) {
 	return false, nil
 }
-func (this *DefaultInterceptor) AfterEach(
-	tx *sql.Tx,
-	params map[string]string,
-	result interface{},
-	context map[string]interface{},
-	scriptIndex int,
-	wslApp *WSL) error {
+
+func (this *DefaultInterceptor) AfterEach(tx *sql.Tx, context map[string]interface{}, result interface{}, scriptIndex int) error {
 	return nil
 }
+
 func (this *DefaultInterceptor) OnError(err *error) error {
 	return *err
 }
