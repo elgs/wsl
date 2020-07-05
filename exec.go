@@ -62,35 +62,36 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 				continue
 			}
 			count, err := gosplitargs.CountSeparators(s, "\\?")
+			totalCount += count
 			if err != nil {
 				tx.Rollback()
 				return nil, err
 			}
-			if len(sqlParams) < totalCount+count {
+			if len(sqlParams) < totalCount {
 				tx.Rollback()
-				return nil, errors.New(fmt.Sprint(s, "Incorrect param count. Expected: ", totalCount+count, " actual: ", len(sqlParams)))
+				return nil, errors.New(fmt.Sprint(s, "Incorrect param count. Expected: ", totalCount, " actual: ", len(sqlParams)))
 			}
 
-			skipNext := false
+			skipSql := false
 			for _, li := range queryInterceptors[qID] {
-				skip, err := li.BeforeEach(tx, &s, sqlParams[totalCount:totalCount+count], context, index, this)
+				skip, err := li.BeforeEach(tx, &s, sqlParams[totalCount-count:totalCount], context, index, this)
 				if err != nil {
 					tx.Rollback()
 					return nil, err
 				}
 				if skip == true {
-					skipNext = true
+					skipSql = true
 				}
 			}
 
-			if skipNext {
+			if skipSql {
 				continue
 			}
 
 			export := shouldExport(s)
 			if isQuery(s) {
 				if format == "array" {
-					header, data, err := gosqljson.QueryTxToArray(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
+					header, data, err := gosqljson.QueryTxToArray(tx, theCase, s, sqlParams[totalCount-count:totalCount]...)
 					data = append([][]string{header}, data...)
 					if err != nil {
 						tx.Rollback()
@@ -104,7 +105,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 						queryResult = append(queryResult, data)
 					}
 				} else {
-					data, err := gosqljson.QueryTxToMap(tx, theCase, s, sqlParams[totalCount:totalCount+count]...)
+					data, err := gosqljson.QueryTxToMap(tx, theCase, s, sqlParams[totalCount-count:totalCount]...)
 					if err != nil {
 						tx.Rollback()
 						ierr := this.interceptError(qID, &err)
@@ -118,7 +119,7 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 					}
 				}
 			} else {
-				rowsAffected, err := gosqljson.ExecTx(tx, s, sqlParams[totalCount:totalCount+count]...)
+				rowsAffected, err := gosqljson.ExecTx(tx, s, sqlParams[totalCount-count:totalCount]...)
 				if err != nil {
 					tx.Rollback()
 					ierr := this.interceptError(qID, &err)
@@ -131,7 +132,6 @@ func (this *WSL) exec(qID string, db *sql.DB, script string, params map[string]s
 					queryResult = append(queryResult, rowsAffected)
 				}
 			}
-			totalCount += count
 
 			for index, li := range queryInterceptors[qID] {
 				err := li.AfterEach(tx, params, queryResult, context, index, this)
