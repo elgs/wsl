@@ -17,7 +17,8 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 	context["params"] = params
 	context["app"] = this
 
-	queryResult := []interface{}{}
+	results := []interface{}{}
+	var result interface{}
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -114,10 +115,11 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 						return nil, err
 					}
 					if export {
-						queryResult = append(queryResult, data)
+						results = append(results, data)
 					}
+					result = data
 				} else {
-					data, err := gosqljson.QueryTxToMap(tx, theCase, s, sqlParams[totalCount-count:totalCount]...)
+					result, err = gosqljson.QueryTxToMap(tx, theCase, s, sqlParams[totalCount-count:totalCount]...)
 					if err != nil {
 						tx.Rollback()
 						ierr := this.interceptError(qID, &err)
@@ -127,11 +129,11 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 						return nil, err
 					}
 					if export {
-						queryResult = append(queryResult, data)
+						results = append(results, result)
 					}
 				}
 			} else {
-				rowsAffected, err := gosqljson.ExecTx(tx, s, sqlParams[totalCount-count:totalCount]...)
+				result, err = gosqljson.ExecTx(tx, s, sqlParams[totalCount-count:totalCount]...)
 				if err != nil {
 					tx.Rollback()
 					ierr := this.interceptError(qID, &err)
@@ -141,12 +143,12 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 					return nil, err
 				}
 				if export {
-					queryResult = append(queryResult, rowsAffected)
+					results = append(results, result)
 				}
 			}
 
-			for index, li := range queryInterceptors[qID] {
-				err := li.AfterEach(tx, context, queryResult, index)
+			for _, li := range queryInterceptors[qID] {
+				err := li.AfterEach(tx, context, result, index)
 				if err != nil {
 					tx.Rollback()
 					return nil, err
@@ -155,17 +157,13 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 		}
 	}
 
-	var results interface{}
-	if len(queryResult) == 0 {
-		results = []interface{}{}
-	} else if len(queryResult) == 1 {
-		results = queryResult[0]
-	} else {
-		results = queryResult
+	var ret interface{}
+	if len(results) == 1 {
+		ret = results[0]
 	}
 
 	for _, li := range queryInterceptors[qID] {
-		err := li.After(tx, context, results)
+		err := li.After(tx, context, ret)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -173,7 +171,7 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 	}
 
 	for _, gi := range globalInterceptors {
-		err := gi.After(tx, context, results)
+		err := gi.After(tx, context, ret)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -181,7 +179,7 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 	}
 
 	tx.Commit()
-	return results, nil
+	return ret, nil
 }
 
 func (this *WSL) interceptError(qID string, err *error) error {
