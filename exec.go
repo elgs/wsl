@@ -51,12 +51,6 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 			theCase = v
 		}
 
-		// double underscore
-		scriptParams := extractScriptParamsFromMap(params)
-		for k, v := range scriptParams {
-			scripts = strings.Replace(scripts, k, v.(string), -1)
-		}
-
 		scriptsArray, err := gosplitargs.SplitArgs(scripts, ";", true)
 		if err != nil {
 			tx.Rollback()
@@ -72,6 +66,13 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 			if len(s) == 0 {
 				continue
 			}
+
+			// double underscore
+			scriptParams := extractScriptParamsFromMap(params)
+			for k, v := range scriptParams {
+				s = strings.Replace(s, k, v.(string), -1)
+			}
+
 			count, err := gosplitargs.CountSeparators(s, "\\?")
 			totalCount += count
 			if err != nil {
