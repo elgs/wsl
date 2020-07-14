@@ -17,7 +17,8 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 	context["params"] = params
 	context["app"] = this
 
-	results := []interface{}{}
+	exportedResults := []interface{}{}
+	cumulativeResults := []interface{}{}
 	var result interface{}
 
 	tx, err := db.Begin()
@@ -87,12 +88,12 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 
 			skipSql := false
 			for _, li := range queryInterceptors[qID] {
-				skip, err := li.BeforeEach(tx, context, &s, sqlParams[totalCount-count:totalCount], index)
+				skip, err := li.BeforeEach(tx, context, &s, sqlParams[totalCount-count:totalCount], index, cumulativeResults)
 				if err != nil {
 					tx.Rollback()
 					return nil, err
 				}
-				if skip == true {
+				if skip {
 					skipSql = true
 				}
 			}
@@ -114,8 +115,9 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 						}
 						return nil, err
 					}
+					cumulativeResults = append(cumulativeResults, data)
 					if export {
-						results = append(results, data)
+						exportedResults = append(exportedResults, data)
 					}
 					result = data
 				} else {
@@ -128,8 +130,9 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 						}
 						return nil, err
 					}
+					cumulativeResults = append(cumulativeResults, result)
 					if export {
-						results = append(results, result)
+						exportedResults = append(exportedResults, result)
 					}
 				}
 			} else {
@@ -142,13 +145,14 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 					}
 					return nil, err
 				}
+				cumulativeResults = append(cumulativeResults, result)
 				if export {
-					results = append(results, result)
+					exportedResults = append(exportedResults, result)
 				}
 			}
 
 			for _, li := range queryInterceptors[qID] {
-				err := li.AfterEach(tx, context, result, index)
+				err := li.AfterEach(tx, context, result, cumulativeResults, index)
 				if err != nil {
 					tx.Rollback()
 					return nil, err
@@ -158,12 +162,12 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 	}
 
 	var ret interface{}
-	if len(results) == 1 {
-		ret = results[0]
+	if len(exportedResults) == 1 {
+		ret = exportedResults[0]
 	}
 
 	for _, li := range queryInterceptors[qID] {
-		err := li.After(tx, context, ret)
+		err := li.After(tx, context, ret, cumulativeResults)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -171,7 +175,7 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 	}
 
 	for _, gi := range globalInterceptors {
-		err := gi.After(tx, context, ret)
+		err := gi.After(tx, context, ret, cumulativeResults)
 		if err != nil {
 			tx.Rollback()
 			return nil, err

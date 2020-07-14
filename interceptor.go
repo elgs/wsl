@@ -10,9 +10,9 @@ import (
 // the query, or convert the result to other formats.
 type Interceptor interface {
 	Before(tx *sql.Tx, context map[string]interface{}) error
-	BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int) (bool, error)
-	AfterEach(tx *sql.Tx, context map[string]interface{}, result interface{}, scriptIndex int) error
-	After(tx *sql.Tx, context map[string]interface{}, results interface{}) error
+	BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int, cumulativeResults interface{}) (bool, error)
+	AfterEach(tx *sql.Tx, context map[string]interface{}, result interface{}, cumulativeResults interface{}, scriptIndex int) error
+	After(tx *sql.Tx, context map[string]interface{}, results interface{}, allResults interface{}) error
 	OnError(err *error) error
 }
 
@@ -24,15 +24,15 @@ func (this *DefaultInterceptor) Before(tx *sql.Tx, context map[string]interface{
 	return nil
 }
 
-func (this *DefaultInterceptor) After(tx *sql.Tx, context map[string]interface{}, results interface{}) error {
+func (this *DefaultInterceptor) After(tx *sql.Tx, context map[string]interface{}, results interface{}, allResults interface{}) error {
 	return nil
 }
 
-func (this *DefaultInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int) (bool, error) {
+func (this *DefaultInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int, cumulativeResults interface{}) (bool, error) {
 	return false, nil
 }
 
-func (this *DefaultInterceptor) AfterEach(tx *sql.Tx, context map[string]interface{}, result interface{}, scriptIndex int) error {
+func (this *DefaultInterceptor) AfterEach(tx *sql.Tx, context map[string]interface{}, result interface{}, cumulativeResults interface{}, scriptIndex int) error {
 	return nil
 }
 
