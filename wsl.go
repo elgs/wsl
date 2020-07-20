@@ -10,7 +10,17 @@ import (
 
 type WSL struct {
 	Config    *Config
+	Scripts   map[string]string
 	databases map[string]*sql.DB
+
+	// globalInterceptors is the registry of a list of Interceptors that is
+	// guaranteed to be executed in its list order on each query.
+	globalInterceptors []Interceptor
+
+	// queryInterceptors is the registry for each named query (qID) of a list of
+	// Interceptors that is guaranteed to be executed in its list order on each
+	// query.
+	queryInterceptors map[string][]Interceptor
 }
 
 func New(confFile string) (*WSL, error) {
@@ -18,10 +28,14 @@ func New(confFile string) (*WSL, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &WSL{
-		Config:    config,
-		databases: map[string]*sql.DB{},
-	}, nil
+	wsl := &WSL{
+		Config:            config,
+		Scripts:           map[string]string{},
+		databases:         map[string]*sql.DB{},
+		queryInterceptors: map[string][]Interceptor{},
+	}
+	err = wsl.LoadScripts("")
+	return wsl, err
 }
 
 func (this *WSL) connectToDb(dbName string) error {

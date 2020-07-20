@@ -12,19 +12,17 @@ type Interceptor interface {
 	Before(tx *sql.Tx, context map[string]interface{}) error
 	BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int, cumulativeResults interface{}) (bool, error)
 	AfterEach(tx *sql.Tx, context map[string]interface{}, result interface{}, cumulativeResults interface{}, scriptIndex int) error
-	After(tx *sql.Tx, context map[string]interface{}, results interface{}, allResults interface{}) error
+	After(tx *sql.Tx, context map[string]interface{}, results *interface{}, allResults interface{}) error
 	OnError(err *error) error
 }
 
 type DefaultInterceptor struct{}
 
 func (this *DefaultInterceptor) Before(tx *sql.Tx, context map[string]interface{}) error {
-	params := context["params"].(map[string]interface{})
-	params["case"] = "lower"
 	return nil
 }
 
-func (this *DefaultInterceptor) After(tx *sql.Tx, context map[string]interface{}, results interface{}, allResults interface{}) error {
+func (this *DefaultInterceptor) After(tx *sql.Tx, context map[string]interface{}, results *interface{}, allResults interface{}) error {
 	return nil
 }
 
@@ -40,27 +38,18 @@ func (this *DefaultInterceptor) OnError(err *error) error {
 	return *err
 }
 
-func RegisterQueryInterceptors(queryId string, is ...Interceptor) {
+func (this *WSL) RegisterQueryInterceptors(queryId string, is ...Interceptor) {
 	for _, i := range is {
-		if _, ok := queryInterceptors[queryId]; ok {
-			queryInterceptors[queryId] = append(queryInterceptors[queryId], i)
+		if _, ok := this.queryInterceptors[queryId]; ok {
+			this.queryInterceptors[queryId] = append(this.queryInterceptors[queryId], i)
 		} else {
-			queryInterceptors[queryId] = []Interceptor{i}
+			this.queryInterceptors[queryId] = []Interceptor{i}
 		}
 	}
 }
 
-func RegisterGlobalInterceptors(is ...Interceptor) {
+func (this *WSL) RegisterGlobalInterceptors(is ...Interceptor) {
 	for _, i := range is {
-		globalInterceptors = append(globalInterceptors, i)
+		this.globalInterceptors = append(this.globalInterceptors, i)
 	}
 }
-
-// globalInterceptors is the registry of a list of Interceptors that is
-// guaranteed to be executed in its list order on each query.
-var globalInterceptors []Interceptor
-
-// queryInterceptors is the registry for each named query (qID) of a list of
-// Interceptors that is guaranteed to be executed in its list order on each
-// query.
-var queryInterceptors = make(map[string][]Interceptor)

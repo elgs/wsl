@@ -34,9 +34,9 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	qID := urlPath[1]
 
 	if os.Getenv("env") == "dev" {
-		this.Config.LoadScripts(qID)
+		this.LoadScripts(qID)
 	}
-	script := this.Config.App["scripts"].(map[string]string)[qID]
+	script := this.Scripts[qID]
 
 	sepIndex := strings.LastIndex(r.RemoteAddr, ":")
 	clientIp := r.RemoteAddr[0:sepIndex]

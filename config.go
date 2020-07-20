@@ -52,12 +52,10 @@ func NewConfig(confFile string) (*Config, error) {
 		Mail:      &ConfigMail{},
 		App:       map[string]interface{}{},
 	}
-	config.App["scripts"] = make(map[string]interface{})
 	err := config.LoadConfig()
 	if err != nil {
 		return config, err
 	}
-	err = config.LoadScripts("")
 	return config, err
 }
 
@@ -121,9 +119,8 @@ func (this *Config) LoadConfig() error {
 	return nil
 }
 
-func (this *Config) LoadScripts(scriptName string) error {
-	scriptPath := path.Dir(this.ConfFile)
-	this.App["scripts"] = map[string]string{}
+func (this *WSL) LoadScripts(scriptName string) error {
+	scriptPath := path.Dir(this.Config.ConfFile)
 
 	return filepath.Walk(scriptPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -135,7 +132,7 @@ func (this *Config) LoadScripts(scriptName string) error {
 				log.Println(err)
 			}
 			scriptName := strings.TrimSuffix(info.Name(), ".sql")
-			this.App["scripts"].(map[string]string)[scriptName] = string(data)
+			this.Scripts[scriptName] = string(data)
 			if info.Name() == scriptName {
 				return io.EOF
 			}
