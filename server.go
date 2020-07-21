@@ -74,11 +74,11 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	headers := valuesToMap(true, r.Header)
 	authHeader := headers["access_token"]
 
-	if authHeader == "" {
+	if authHeader == nil || authHeader == "" {
 		authHeader = params["access_token"]
 	}
 
-	if authHeader != "" {
+	if authHeader != nil || authHeader == "" {
 		context["access_token"] = authHeader
 	}
 	result, err := this.exec(qID, this.databases["main"], script, params, context)
