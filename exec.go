@@ -163,7 +163,7 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 		}
 	}
 
-	var ret interface{}
+	var ret interface{} = exportedResults
 	if len(exportedResults) == 1 {
 		ret = exportedResults[0]
 	}
