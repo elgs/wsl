@@ -64,7 +64,7 @@ func (this *WSL) Start() {
 		return
 	}
 
-	if this.databases["main"] != nil {
+	if this.databases["audit"] != nil {
 		if err := this.connectToDb("audit"); err != nil {
 			log.Println(err)
 			return
