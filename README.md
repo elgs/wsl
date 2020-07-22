@@ -25,14 +25,14 @@ func main() {
 	confFile := flag.String("c", "/etc/wsld.json", "configration file path")
 	flag.Parse()
 
-	wsld, err := wsl.New(*confFile)
+	app, err := wsl.New(*confFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// optionally load built in user management interceptors and scripts
-	scripts.LoadBuiltInScripts(wsld)
-	interceptors.RegisterBuiltInInterceptors(wsld)
+	scripts.LoadBuiltInScripts(app)
+	interceptors.RegisterBuiltInInterceptors(app)
 
 	// done manully
 	// wsld.RegisterGlobalInterceptors(&interceptors.AuthInterceptor{})
@@ -43,9 +43,10 @@ func main() {
 	// wsld.Scripts["signup"] = scripts.Signup
 	// ...
 
-	wsld.Start()
+	app.Start()
 	wsl.Hook()
 }
+
 ```
 ### wsld.json
 ```json
