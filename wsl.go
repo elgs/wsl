@@ -59,10 +59,16 @@ func (this *WSL) connectToDb(dbName string) error {
 }
 
 func (this *WSL) Start() {
-	err := this.connectToDb("main")
-	if err != nil {
+	if err := this.connectToDb("main"); err != nil {
 		log.Println(err)
 		return
+	}
+
+	if this.databases["main"] != nil {
+		if err := this.connectToDb("audit"); err != nil {
+			log.Println(err)
+			return
+		}
 	}
 
 	http.HandleFunc("/", this.defaultHandler)
