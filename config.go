@@ -70,20 +70,18 @@ func (this *Config) LoadConfig() error {
 
 	if v, err := jqConf.QueryToString("web.https_addr"); err == nil {
 		this.Web.HttpsAddr = v
-	} else {
-		this.Web.HttpsAddr = "127.0.0.1:2443"
-	}
 
-	if v, err := jqConf.QueryToString("web.cert_file"); err == nil {
-		this.Web.CertFile = v
-	} else {
-		this.Web.CertFile = path.Join(path.Dir(this.ConfFile), "cert.pem")
-	}
+		if v, err := jqConf.QueryToString("web.cert_file"); err == nil {
+			this.Web.CertFile = v
+		} else {
+			this.Web.CertFile = path.Join(path.Dir(this.ConfFile), "cert.pem")
+		}
 
-	if v, err := jqConf.QueryToString("web.key_file"); err == nil {
-		this.Web.KeyFile = v
-	} else {
-		this.Web.KeyFile = path.Join(path.Dir(this.ConfFile), "key.pem")
+		if v, err := jqConf.QueryToString("web.key_file"); err == nil {
+			this.Web.KeyFile = v
+		} else {
+			this.Web.KeyFile = path.Join(path.Dir(this.ConfFile), "key.pem")
+		}
 	}
 
 	if v, err := jqConf.QueryToMap("databases"); err == nil {
