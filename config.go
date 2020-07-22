@@ -64,53 +64,52 @@ func (this *Config) LoadConfig() error {
 	if err != nil {
 		return err
 	}
-	v1, err := jqConf.QueryToString("web.http_addr")
-	if err == nil {
-		this.Web.HttpAddr = v1
+	if v, err := jqConf.QueryToString("web.http_addr"); err == nil {
+		this.Web.HttpAddr = v
 	}
-	v2, err := jqConf.QueryToString("web.https_addr")
-	if err == nil {
-		this.Web.HttpsAddr = v2
-	}
-	v3, err := jqConf.QueryToString("web.cert_file")
-	if err == nil {
-		this.Web.CertFile = v3
+
+	if v, err := jqConf.QueryToString("web.https_addr"); err == nil {
+		this.Web.HttpsAddr = v
 	} else {
-		// default
+		this.Web.HttpsAddr = "127.0.0.1:2443"
+	}
+
+	if v, err := jqConf.QueryToString("web.cert_file"); err == nil {
+		this.Web.CertFile = v
+	} else {
 		this.Web.CertFile = path.Join(path.Dir(this.ConfFile), "cert.pem")
 	}
-	v4, err := jqConf.QueryToString("web.key_file")
-	if err == nil {
-		this.Web.KeyFile = v4
+
+	if v, err := jqConf.QueryToString("web.key_file"); err == nil {
+		this.Web.KeyFile = v
 	} else {
-		// default
 		this.Web.KeyFile = path.Join(path.Dir(this.ConfFile), "key.pem")
 	}
-	v7, err := jqConf.QueryToMap("databases")
-	if err == nil {
-		this.Databases = v7
+
+	if v, err := jqConf.QueryToMap("databases"); err == nil {
+		this.Databases = v
 	}
-	v8, err := jqConf.QueryToBool("web.cors")
-	if err == nil {
-		this.Web.Cors = v8
+
+	if v, err := jqConf.QueryToBool("web.cors"); err == nil {
+		this.Web.Cors = v
 	} else {
-		this.Web.Cors = false
+		this.Web.Cors = true
 	}
-	v9, err := jqConf.QueryToString("mail.mail_host")
-	if err == nil {
-		this.Mail.MailHost = v9
+
+	if v, err := jqConf.QueryToString("mail.mail_host"); err == nil {
+		this.Mail.MailHost = v
 	}
-	v10, err := jqConf.QueryToString("mail.mail_username")
-	if err == nil {
-		this.Mail.MailUsername = v10
+
+	if v, err := jqConf.QueryToString("mail.mail_username"); err == nil {
+		this.Mail.MailUsername = v
 	}
-	v11, err := jqConf.QueryToString("mail.mail_password")
-	if err == nil {
-		this.Mail.MailPassword = v11
+
+	if v, err := jqConf.QueryToString("mail.mail_password"); err == nil {
+		this.Mail.MailPassword = v
 	}
-	v12, err := jqConf.QueryToMap("app")
-	if err == nil {
-		this.App = v12
+
+	if v, err := jqConf.QueryToMap("app"); err == nil {
+		this.App = v
 	}
 	// fmt.Println(this.Web)
 	// fmt.Println(this.Db)
