@@ -24,14 +24,14 @@ type WSL struct {
 	queryInterceptors map[string][]Interceptor
 }
 
-func New() (*WSL, error) {
-	confFile := flag.String("c", "/etc/wsld.json", "configration file path")
+func NewWithConfigPath(confPath string) (*WSL, error) {
+	confFile := flag.String("c", confPath, "configration file path")
 	flag.Parse()
 
-	return NewWithJSON(*confFile)
+	return NewWithConfigJSON(*confFile)
 }
 
-func NewWithJSON(confFile string) (*WSL, error) {
+func NewWithConfigJSON(confFile string) (*WSL, error) {
 	config, err := NewConfig(confFile)
 	if err != nil {
 		return nil, err

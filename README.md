@@ -21,7 +21,7 @@ import (
 )
 
 func main() {
-	app, err := wsl.New()
+	app, err := wsl.NewWithConfigPath("/etc/wsld.json")
 	if err != nil {
 		log.Fatal(err)
 	}
