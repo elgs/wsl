@@ -109,7 +109,15 @@ func isQuery(sql string) bool {
 	return false
 }
 
-func ConvertInterfaceArrayToStringArray(arrayOfInterfaces []interface{}) ([]string, error) {
+var ConvertStringArrayToInterfaceArray = func(arrayOfStrings []string) []interface{} {
+	ret := []interface{}{}
+	for _, v := range arrayOfStrings {
+		ret = append(ret, v)
+	}
+	return ret
+}
+
+var ConvertInterfaceArrayToStringArray = func(arrayOfInterfaces []interface{}) ([]string, error) {
 	ret := []string{}
 	for _, v := range arrayOfInterfaces {
 		if s, ok := v.(string); ok {

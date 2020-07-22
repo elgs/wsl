@@ -2,6 +2,7 @@ package wsl
 
 import (
 	"database/sql"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,7 +24,14 @@ type WSL struct {
 	queryInterceptors map[string][]Interceptor
 }
 
-func New(confFile string) (*WSL, error) {
+func New() (*WSL, error) {
+	confFile := flag.String("c", "/etc/wsld.json", "configration file path")
+	flag.Parse()
+
+	return NewWithJSON(*confFile)
+}
+
+func NewWithJSON(confFile string) (*WSL, error) {
 	config, err := NewConfig(confFile)
 	if err != nil {
 		return nil, err

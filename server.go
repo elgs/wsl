@@ -28,7 +28,7 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	if len(urlPath) < 2 {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, fmt.Sprint(`{"err":"Invalid URL"}`))
+		fmt.Fprint(w, fmt.Sprint(`{"err":"invalid_url"}`))
 		return
 	}
 	qID := urlPath[1]
@@ -63,6 +63,11 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	params := valuesToMap(false, paramValues)
+	if queryParams, ok := params["params"]; ok {
+		if ps, ok := queryParams.(string); ok {
+			params["params"] = ConvertStringArrayToInterfaceArray(strings.Split(ps, ","))
+		}
+	}
 	for k, v := range bodyData {
 		params[k] = v
 	}
