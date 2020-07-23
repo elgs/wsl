@@ -17,6 +17,14 @@ func (this *ResetPasswordInterceptor) Before(tx *sql.Tx, context map[string]inte
 		return errors.New("invalid_token")
 	}
 
+	if session, ok := context["session"].(map[string]string); ok {
+		if session["user_flag"] == "signup" {
+			return errors.New("user_not_verified")
+		}
+	} else {
+		return errors.New("invalid_session")
+	}
+
 	if context["user_mode"] != "root" {
 		return errors.New("access_denied")
 	}

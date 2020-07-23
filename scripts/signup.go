@@ -15,4 +15,4 @@ PASSWORD=ENCRYPT(?, CONCAT('\$6\$rounds=5000$',@salt)),
 USER_FLAG='signup',
 USER_FLAG_CODE='__signup',
 MODE='',
-TIME_CREATED=@now_utc;`
+CREATED_TIME=@now_utc;`
