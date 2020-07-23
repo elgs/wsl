@@ -19,12 +19,14 @@ USER.MODE,
 USER.TIME_CREATED,
 USER_SESSION.ID AS SESSION_ID,
 USER_SESSION.LOGIN_TIME,
-USER_SESSION.IP
+USER_SESSION.LOGIN_IP
 FROM USER INNER JOIN USER_SESSION ON USER.ID=USER_SESSION.USER_ID 
 WHERE USER_SESSION.ID=?`
 
 var updateLastSeenQuery = `
-UPDATE USER_SESSION SET LAST_SEEN_TIME=CONVERT_TZ(NOW(),'System','+0:0')
+UPDATE USER_SESSION 
+SET LAST_SEEN_TIME=CONVERT_TZ(NOW(),'System','+0:0'),
+LAST_SEEN_IP=?
 WHERE ID=?
 `
 
@@ -46,8 +48,8 @@ func (this *AuthInterceptor) getSession(tx *sql.Tx, sessionId string) (map[strin
 	return dbResult[0], nil
 }
 
-func (this *AuthInterceptor) updateLastSeen(db *sql.DB, sessionId string) {
-	gosqljson.ExecDb(db, updateLastSeenQuery, sessionId)
+func (this *AuthInterceptor) updateLastSeen(db *sql.DB, sessionId string, ip string) {
+	gosqljson.ExecDb(db, updateLastSeenQuery, ip, sessionId)
 }
 
 type AuthInterceptor struct {
@@ -66,7 +68,10 @@ func (this *AuthInterceptor) Before(tx *sql.Tx, context map[string]interface{}) 
 		}
 		if app, ok := context["app"].(*wsl.WSL); ok {
 			db := app.Databases["main"]
-			go this.updateLastSeen(db, tokenString)
+			if params, ok := context["params"].(map[string]interface{}); ok {
+				clientIp := params["__client_ip"]
+				go this.updateLastSeen(db, tokenString, clientIp.(string))
+			}
 		}
 
 		params["__session_id"] = fmt.Sprintf("%v", session["session_id"])
