@@ -9,7 +9,8 @@ import (
 	"github.com/elgs/wsl"
 )
 
-var sessionQuery = `SELECT
+var sessionQuery = `
+SELECT
 USER.ID AS USER_ID,
 USER.USERNAME,
 USER.EMAIL,
@@ -18,14 +19,18 @@ USER.MODE,
 USER.TIME_CREATED,
 USER_SESSION.ID AS SESSION_ID,
 USER_SESSION.LOGIN_TIME,
-USER_SESSION.IP,
-USER_SESSION.SESSION_FLAG
+USER_SESSION.IP
 FROM USER INNER JOIN USER_SESSION ON USER.ID=USER_SESSION.USER_ID 
 WHERE USER_SESSION.ID=?`
 
+var updateLastSeenQuery = `
+UPDATE USER_SESSION SET LAST_SEEN_TIME=CONVERT_TZ(NOW(),'System','+0:0')
+WHERE ID=?
+`
+
 var sessions = make(map[string]map[string]string)
 
-func getSession(tx *sql.Tx, sessionId string) (map[string]string, error) {
+func (this *AuthInterceptor) getSession(tx *sql.Tx, sessionId string) (map[string]string, error) {
 	if val, ok := sessions[sessionId]; ok {
 		return val, nil
 	}
@@ -41,6 +46,10 @@ func getSession(tx *sql.Tx, sessionId string) (map[string]string, error) {
 	return dbResult[0], nil
 }
 
+func (this *AuthInterceptor) updateLastSeen(db *sql.DB, sessionId string) {
+	gosqljson.ExecDb(db, updateLastSeenQuery, sessionId)
+}
+
 type AuthInterceptor struct {
 	*wsl.DefaultInterceptor
 }
@@ -51,9 +60,13 @@ func (this *AuthInterceptor) Before(tx *sql.Tx, context map[string]interface{}) 
 
 	if tokenString, ok := context["access_token"].(string); ok {
 
-		session, err := getSession(tx, tokenString)
+		session, err := this.getSession(tx, tokenString)
 		if err != nil {
 			return err
+		}
+		if app, ok := context["app"].(*wsl.WSL); ok {
+			db := app.Databases["main"]
+			go this.updateLastSeen(db, tokenString)
 		}
 
 		params["__session_id"] = fmt.Sprintf("%v", session["session_id"])
@@ -66,14 +79,4 @@ func (this *AuthInterceptor) Before(tx *sql.Tx, context map[string]interface{}) 
 		context["user_mode"] = session["mode"]
 	}
 	return nil
-}
-
-func (this *AuthInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int, cumulativeResults []interface{}) (bool, error) {
-	return false, nil
-}
-func (this *AuthInterceptor) AfterEach(tx *sql.Tx, context map[string]interface{}, result interface{}, cumulativeResults []interface{}, scriptIndex int) error {
-	return nil
-}
-func (this *AuthInterceptor) OnError(err *error) error {
-	return *err
 }

@@ -86,7 +86,7 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	if authHeader != nil || authHeader == "" {
 		context["access_token"] = authHeader
 	}
-	result, err := this.exec(qID, this.databases["main"], script, params, context)
+	result, err := this.exec(qID, this.Databases["main"], script, params, context)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))

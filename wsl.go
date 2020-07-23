@@ -12,7 +12,7 @@ import (
 type WSL struct {
 	Config    *Config
 	Scripts   map[string]string
-	databases map[string]*sql.DB
+	Databases map[string]*sql.DB
 
 	// globalInterceptors is the registry of a list of Interceptors that is
 	// guaranteed to be executed in its list order on each query.
@@ -39,7 +39,7 @@ func NewWithConfigJSON(confFile string) (*WSL, error) {
 	wsl := &WSL{
 		Config:            config,
 		Scripts:           map[string]string{},
-		databases:         map[string]*sql.DB{},
+		Databases:         map[string]*sql.DB{},
 		queryInterceptors: map[string][]Interceptor{},
 	}
 	err = wsl.LoadScripts("")
@@ -47,25 +47,20 @@ func NewWithConfigJSON(confFile string) (*WSL, error) {
 }
 
 func (this *WSL) connectToDb(dbName string) error {
-	if this.databases[dbName] == nil {
+	if this.Databases[dbName] == nil {
 		dbData := this.Config.Databases[dbName].(map[string]interface{})
 		db, err := sql.Open(dbData["db_type"].(string), dbData["db_url"].(string))
 		if err != nil {
 			return err
 		}
-		this.databases[dbName] = db
+		this.Databases[dbName] = db
 	}
 	return nil
 }
 
 func (this *WSL) Start() {
-	if err := this.connectToDb("main"); err != nil {
-		log.Println(err)
-		return
-	}
-
-	if this.databases["audit"] != nil {
-		if err := this.connectToDb("audit"); err != nil {
+	for dbName := range this.Config.Databases {
+		if err := this.connectToDb(dbName); err != nil {
 			log.Println(err)
 			return
 		}
