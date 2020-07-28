@@ -8,7 +8,8 @@ set @now_utc := CONVERT_TZ(NOW(),'System','+0:0');
 set @username=?;
 
 insert INTO USER_SESSION
-SELECT @safe_id, ID,USERNAME,EMAIL,@now_utc,@now_utc,'__client_ip','__client_ip'
+SELECT @safe_id, ID,USERNAME,EMAIL,@now_utc,@now_utc,'__client_ip','__client_ip',
+'{"login":true}'
 FROM USER WHERE (USERNAME=@username OR EMAIL=@username) 
 AND PASSWORD=ENCRYPT(?, PASSWORD);
 
