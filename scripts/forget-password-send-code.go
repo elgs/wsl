@@ -5,7 +5,10 @@ var ForgetPasswordSendCode = `
 
 set @username := ?;
 
-update USER SET USER.USER_FLAG='forget_password', USER.USER_FLAG_CODE='__forget_password'
-WHERE USER.USERNAME=@username OR USER.EMAIL=@username;
+update USER SET 
+USER.USER_FLAG='forget_password', 
+USER.USER_FLAG_CODE='__forget_password'
+WHERE (USER.USERNAME=@username OR USER.EMAIL=@username)
+AND USER.USER_FLAG!='signup';
 
-select EMAIL FROM USER WHERE (USERNAME=@username OR EMAIL=@username);`
+select EMAIL FROM USER WHERE (USERNAME=@username OR EMAIL=@username) AND USER.USER_FLAG='forget_password';`

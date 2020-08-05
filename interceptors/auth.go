@@ -14,15 +14,18 @@ SELECT
 USER.ID AS USER_ID,
 USER.USERNAME,
 USER.EMAIL,
-USER.USER_FLAG,
 USER.MODE,
 USER.CREATED_TIME,
 USER_SESSION.ID AS SESSION_ID,
-USER_SESSION.SESSION_FLAGS,
 USER_SESSION.LOGIN_TIME,
 USER_SESSION.LOGIN_IP
 FROM USER INNER JOIN USER_SESSION ON USER.ID=USER_SESSION.USER_ID 
-WHERE USER_SESSION.ID=?`
+WHERE USER_SESSION.ID=?
+`
+
+var flagsQuery = `
+SELECT CODE, VALUE, PRIVATE FROM USER_FLAG WHERE USER_ID=?
+`
 
 var updateLastSeenQuery = `
 UPDATE USER_SESSION 
@@ -31,9 +34,9 @@ LAST_SEEN_IP=?
 WHERE ID=?
 `
 
-var sessions = make(map[string]map[string]string)
+var sessions = make(map[string]map[string]interface{})
 
-func (this *AuthInterceptor) getSession(tx *sql.Tx, sessionId string) (map[string]string, error) {
+func (this *AuthInterceptor) getSession(tx *sql.Tx, sessionId string) (map[string]interface{}, error) {
 	if val, ok := sessions[sessionId]; ok {
 		return val, nil
 	}
@@ -45,8 +48,34 @@ func (this *AuthInterceptor) getSession(tx *sql.Tx, sessionId string) (map[strin
 	if len(dbResult) != 1 {
 		return nil, errors.New("session_not_found")
 	}
-	sessions[sessionId] = dbResult[0]
-	return dbResult[0], nil
+	sessions[sessionId], err = wsl.ConvertMapOfStringsToMapOfInterfaces(dbResult[0])
+	if err != nil {
+		return nil, err
+	}
+
+	userId := dbResult[0]["user_id"]
+	userFlags, err := this.getUserFlags(tx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	userFlagsMap := make(map[string]interface{})
+	for _, flag := range userFlags {
+		private := flag["private"]
+		if private == "1" {
+			userFlagsMap[flag["code"]] = ""
+		} else {
+			userFlagsMap[flag["code"]] = flag["value"]
+		}
+	}
+
+	sessions[sessionId]["flags"] = userFlagsMap
+
+	return sessions[sessionId], nil
+}
+
+func (this *AuthInterceptor) getUserFlags(tx *sql.Tx, userId string) ([]map[string]string, error) {
+	return gosqljson.QueryTxToMap(tx, "lower", flagsQuery, userId)
 }
 
 func (this *AuthInterceptor) updateLastSeen(db *sql.DB, sessionId string, ip string) {

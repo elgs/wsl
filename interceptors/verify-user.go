@@ -12,7 +12,9 @@ type VerifyUserInterceptor struct {
 
 func (this *VerifyUserInterceptor) After(tx *sql.Tx, context map[string]interface{}, results *interface{}, allResult interface{}) error {
 	if sessionId, ok := context["session_id"].(string); ok {
-		sessions[sessionId]["user_flag"] = ""
+		if flags, ok := sessions[sessionId]["flags"].(map[string]interface{}); ok {
+			delete(flags, "signup")
+		}
 	}
 	return nil
 }

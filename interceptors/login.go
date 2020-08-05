@@ -17,8 +17,8 @@ func (this *LoginInterceptor) AfterEach(tx *sql.Tx, context map[string]interface
 		if val, ok := result.([]map[string]string); ok && len(val) == 1 {
 			context["session_id"] = val[0]["session_id"]
 			email := val[0]["email"]
-			userFlag := val[0]["user_flag"]
-			userFlagCode := val[0]["user_flag_code"]
+			userFlag := val[0]["code"]
+			userFlagCode := val[0]["value"]
 
 			if wslApp, ok := context["app"].(*wsl.WSL); ok && userFlag == "signup" {
 				err := wslApp.SendMail(email, "New Account Verification Code", userFlagCode, email)
