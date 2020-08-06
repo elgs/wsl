@@ -11,6 +11,7 @@ func RegisterBuiltInInterceptors(app *wsl.WSL) {
 	app.RegisterQueryInterceptors("logout", &LogoutInterceptor{})
 	app.RegisterQueryInterceptors("session", &SessionInterceptor{})
 	app.RegisterQueryInterceptors("forget-password-send-code", &ForgetPasswordSendCodeInterceptor{})
+	app.RegisterQueryInterceptors("forget-password-reset-password", &ForgetPasswordResetPasswordInterceptor{})
 	app.RegisterQueryInterceptors("reset-password", &ResetPasswordInterceptor{})
 	app.RegisterQueryInterceptors("change-password", &ChangePasswordInterceptor{})
 }
