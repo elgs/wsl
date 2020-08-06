@@ -13,13 +13,11 @@ type ResetPasswordInterceptor struct {
 
 func (this *ResetPasswordInterceptor) Before(tx *sql.Tx, context map[string]interface{}) error {
 
-	if context["session_id"] == "" {
-		return errors.New("invalid_token")
-	}
-
-	if session, ok := context["session"].(map[string]string); ok {
-		if session["user_flag"] == "signup" {
-			return errors.New("user_not_verified")
+	if session, ok := context["session"].(map[string]interface{}); ok {
+		if flags, ok := session["flags"].(map[string]interface{}); ok {
+			if flags["signup"] != nil {
+				return errors.New("user_not_verified")
+			}
 		}
 	} else {
 		return errors.New("invalid_session")

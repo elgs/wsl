@@ -7,7 +7,7 @@ set @newPassword := ?;
 set @vCode := ?;
 set @salt := SHA2(RAND(), 512);
 
-select ID INTO @uid  FROM USER WHERE (USER.USERNAME=@username OR USER.EMAIL=@username);
+select ID INTO @uid FROM USER WHERE (USER.USERNAME=@username OR USER.EMAIL=@username);
 
 UPDATE USER SET 
 USER.PASSWORD=ENCRYPT(@newPassword, CONCAT('\$6\$rounds=5000$',@salt))
