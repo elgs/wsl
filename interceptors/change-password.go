@@ -17,7 +17,7 @@ func (this *ChangePasswordInterceptor) Before(tx *sql.Tx, context map[string]int
 		return errors.New("invalid_token")
 	}
 
-	if session, ok := context["session"].(map[string]string); ok {
+	if session, ok := context["session"].(map[string]interface{}); ok {
 		if session["user_flag"] == "signup" {
 			return errors.New("user_not_verified")
 		}

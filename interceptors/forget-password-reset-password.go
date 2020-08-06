@@ -11,7 +11,7 @@ type ForgetPasswordResetPasswordInterceptor struct {
 }
 
 func (this *ForgetPasswordResetPasswordInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int, cumulativeResults []interface{}) (bool, error) {
-	if scriptIndex == 6 {
+	if scriptIndex == 7 {
 		if cumulativeResults[6] == int64(0) {
 			// if password is not changed, skip deleting other sessions
 			return true, nil
