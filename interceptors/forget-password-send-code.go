@@ -26,7 +26,7 @@ func (this *ForgetPasswordSendCodeInterceptor) Before(tx *sql.Tx, context map[st
 
 func (this *ForgetPasswordSendCodeInterceptor) AfterEach(tx *sql.Tx, context map[string]interface{}, result interface{}, cumulativeResults []interface{}, scriptIndex int) error {
 
-	if scriptIndex == 2 {
+	if scriptIndex == 5 {
 		if val, ok := result.([]map[string]string); ok && len(val) == 1 {
 			email := val[0]["email"]
 			userFlagCode := context["forget_password"]

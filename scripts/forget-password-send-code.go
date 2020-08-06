@@ -3,12 +3,18 @@ package scripts
 var ForgetPasswordSendCode = `
 -- username or email
 
+set @safe_id := REPLACE(UUID(),'-','');
+set @now_utc := CONVERT_TZ(NOW(),'System','+0:0');
 set @username := ?;
 
-update USER SET 
-USER.USER_FLAG='forget_password', 
-USER.USER_FLAG_CODE='__forget_password'
-WHERE (USER.USERNAME=@username OR USER.EMAIL=@username)
-AND USER.USER_FLAG!='signup';
+select ID, EMAIL INTO @uid, @email FROM USER WHERE (USER.USERNAME=@username OR USER.EMAIL=@username);
 
-select EMAIL FROM USER WHERE (USERNAME=@username OR EMAIL=@username) AND USER.USER_FLAG='forget_password';`
+replace INTO USER_FLAG SET
+ID=@safe_id,
+USER_ID=@uid,
+CODE='forget_password',
+VALUE='__forget_password',
+PRIVATE=1,
+CREATED_TIME=@now_utc;
+
+select @email AS EMAIL;`
