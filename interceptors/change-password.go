@@ -27,8 +27,8 @@ func (this *ChangePasswordInterceptor) Before(tx *sql.Tx, context map[string]int
 }
 
 func (this *ChangePasswordInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int, cumulativeResults []interface{}) (bool, error) {
-	if scriptIndex == 2 {
-		if cumulativeResults[1] == int64(0) {
+	if scriptIndex == 4 {
+		if cumulativeResults[3] == int64(0) {
 			// if password is not changed, skip deleting other sessions
 			return true, nil
 		}

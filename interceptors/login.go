@@ -13,7 +13,7 @@ type LoginInterceptor struct {
 
 func (this *LoginInterceptor) AfterEach(tx *sql.Tx, context map[string]interface{}, result interface{}, cumulativeResults []interface{}, scriptIndex int) error {
 
-	if scriptIndex == 4 {
+	if scriptIndex == 5 {
 		if val, ok := result.([]map[string]string); ok && len(val) == 1 {
 			context["session_id"] = val[0]["session_id"]
 			email := val[0]["email"]

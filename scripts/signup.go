@@ -2,6 +2,9 @@ package scripts
 
 var Signup = `
 -- username, email, password
+set @username := ?;
+set @email := ?;
+set @password := ?;
 
 set @safe_id := REPLACE(UUID(),'-','');
 set @safe_id_1 := REPLACE(UUID(),'-','');
@@ -10,9 +13,9 @@ set @now_utc := CONVERT_TZ(NOW(),'System','+0:0');
 
 INSERT INTO USER SET 
 ID=@safe_id, 
-USERNAME=?, 
-EMAIL=?, 
-PASSWORD=ENCRYPT(?, CONCAT('\$6\$rounds=5000$',@salt)), 
+USERNAME=@username, 
+EMAIL=@email, 
+PASSWORD=ENCRYPT(@password, CONCAT('\$6\$rounds=5000$',@salt)), 
 MODE='',
 CREATED_TIME=@now_utc;
 

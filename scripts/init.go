@@ -2,6 +2,12 @@ package scripts
 
 var Init = `
 -- root email, root password
+set @rootEmail=?;
+set @rootPassword=?;
+
+set @safe_id := REPLACE(UUID(),'-','');
+set @salt := SHA2(RAND(), 512);
+set @now_utc := CONVERT_TZ(NOW(),'System','+0:0');
 
 CREATE TABLE IF NOT EXISTS USER (
   ID char(32) COLLATE utf8mb4_general_ci NOT NULL,
@@ -45,13 +51,6 @@ CREATE TABLE USER_FLAG (
 	UNIQUE KEY USER_ID (USER_ID,CODE)
  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
  
-set @safe_id := REPLACE(UUID(),'-','');
-set @salt := SHA2(RAND(), 512);
-set @now_utc := CONVERT_TZ(NOW(),'System','+0:0');
-
-set @rootEmail=?;
-set @rootPassword=?;
-
 INSERT INTO USER SET 
 ID=@safe_id, 
 USERNAME='root', 

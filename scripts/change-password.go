@@ -2,12 +2,14 @@ package scripts
 
 var ChangePassword = `
 -- new password, old password
+set @newPassword := ?;
+set @oldPassword := ?;
 
 set @salt := SHA2(RAND(), 512);
 
 UPDATE USER SET 
-USER.PASSWORD=ENCRYPT(?, CONCAT('\$6\$rounds=5000$',@salt))
-WHERE USER.PASSWORD=ENCRYPT(?, USER.PASSWORD)
+USER.PASSWORD=ENCRYPT(@newPassword, CONCAT('\$6\$rounds=5000$',@salt))
+WHERE USER.PASSWORD=ENCRYPT(@oldPassword, USER.PASSWORD)
 AND EXISTS(
 	SELECT 1 FROM USER_SESSION WHERE
 	USER.ID=USER_SESSION.USER_ID 

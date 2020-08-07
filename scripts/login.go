@@ -2,15 +2,16 @@ package scripts
 
 var Login = `
 -- username or email, password
+set @username := ?;
+set @password := ?;
 
 set @safe_id := REPLACE(UUID(),'-','');
 set @now_utc := CONVERT_TZ(NOW(),'System','+0:0');
-set @username=?;
 
 insert INTO USER_SESSION
 SELECT @safe_id, ID,USERNAME,EMAIL,@now_utc,@now_utc,'__client_ip','__client_ip'
 FROM USER WHERE (USERNAME=@username OR EMAIL=@username) 
-AND PASSWORD=ENCRYPT(?, PASSWORD);
+AND PASSWORD=ENCRYPT(@password, PASSWORD);
 
 select 
 USER_SESSION.ID AS SESSION_ID, USER.EMAIL, USER_FLAG.CODE, USER_FLAG.VALUE

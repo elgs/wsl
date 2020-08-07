@@ -5,6 +5,7 @@ var ForgetPasswordResetPassword = `
 set @username := ?;
 set @newPassword := ?;
 set @vCode := ?;
+
 set @salt := SHA2(RAND(), 512);
 
 select ID INTO @uid FROM USER WHERE (USER.USERNAME=@username OR USER.EMAIL=@username);
