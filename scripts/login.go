@@ -1,7 +1,7 @@
 package scripts
 
 var Login = `
--- username or email, username or email, password
+-- username or email, password
 
 set @safe_id := REPLACE(UUID(),'-','');
 set @now_utc := CONVERT_TZ(NOW(),'System','+0:0');
