@@ -30,7 +30,7 @@ func (this *ResetPasswordInterceptor) Before(tx *sql.Tx, context map[string]inte
 	return nil
 }
 
-func (this *ResetPasswordInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int, cumulativeResults []interface{}) (bool, error) {
+func (this *ResetPasswordInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int, scriptLabel string, cumulativeResults map[interface{}]interface{}) (bool, error) {
 	if scriptIndex == 5 {
 		if cumulativeResults[4] == int64(0) {
 			// if password is not changed, skip deleting other sessions

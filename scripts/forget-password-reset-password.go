@@ -19,6 +19,7 @@ AND EXISTS (
 	AND USER_FLAG.VALUE=@vCode
 );
 
+#delete_flag
 DELETE FROM USER_FLAG
 WHERE USER_FLAG.CODE='forget_password'
 AND USER_FLAG.VALUE=@vCode
@@ -27,5 +28,6 @@ AND EXISTS (
 	AND USER.ID=@uid 
 );
 
+#delete_session
 DELETE FROM USER_SESSION WHERE USER_SESSION.USER_ID=@uid;
 `

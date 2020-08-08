@@ -11,7 +11,7 @@ type LoginInterceptor struct {
 	*wsl.DefaultInterceptor
 }
 
-func (this *LoginInterceptor) AfterEach(tx *sql.Tx, context map[string]interface{}, result interface{}, cumulativeResults []interface{}, scriptIndex int) error {
+func (this *LoginInterceptor) AfterEach(tx *sql.Tx, context map[string]interface{}, scriptIndex int, scriptLabel string, result interface{}, cumulativeResults map[interface{}]interface{}) error {
 
 	if scriptIndex == 5 {
 		if val, ok := result.([]map[string]string); ok && len(val) == 1 {

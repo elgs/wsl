@@ -93,6 +93,21 @@ func sqlNormalize(sql *string) {
 	*sql = ret
 }
 
+func splitSqlLable(sql string) (label string, s string) {
+	sql = strings.TrimSpace(sql)
+	if strings.HasPrefix(sql, "#") {
+		ss := strings.Fields(sql)
+		lenSS := len(ss)
+		if lenSS == 0 {
+			return "", ""
+		} else if lenSS == 1 {
+			return ss[0], ""
+		}
+		return ss[0], strings.TrimSpace(sql[len(ss[0]):])
+	}
+	return "", sql
+}
+
 func sqlSafe(s *string) {
 	*s = strings.Replace(*s, "'", "''", -1)
 	*s = strings.Replace(*s, "--", "", -1)

@@ -3,6 +3,7 @@ package interceptors
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/elgs/wsl"
 )
@@ -26,9 +27,11 @@ func (this *ChangePasswordInterceptor) Before(tx *sql.Tx, context map[string]int
 	return nil
 }
 
-func (this *ChangePasswordInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int, cumulativeResults []interface{}) (bool, error) {
-	if scriptIndex == 4 {
-		if cumulativeResults[3] == int64(0) {
+func (this *ChangePasswordInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int, scriptLabel string, cumulativeResults map[interface{}]interface{}) (bool, error) {
+	if scriptLabel == "#delete_session" {
+		fmt.Println("aaaa")
+		if cumulativeResults["#update_password"] == int64(0) {
+			fmt.Println("bbbb")
 			// if password is not changed, skip deleting other sessions
 			return true, nil
 		}
