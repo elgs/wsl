@@ -101,9 +101,9 @@ func splitSqlLable(sql string) (label string, s string) {
 		if lenSS == 0 {
 			return "", ""
 		} else if lenSS == 1 {
-			return ss[0], ""
+			return ss[0][1:], ""
 		}
-		return ss[0], strings.TrimSpace(sql[len(ss[0]):])
+		return ss[0][1:], strings.TrimSpace(sql[len(ss[0]):])
 	}
 	return "", sql
 }

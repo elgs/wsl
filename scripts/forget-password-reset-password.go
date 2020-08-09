@@ -10,6 +10,7 @@ set @salt := SHA2(RAND(), 512);
 
 select ID INTO @uid FROM USER WHERE (USER.USERNAME=@username OR USER.EMAIL=@username);
 
+#change_password
 UPDATE USER SET 
 USER.PASSWORD=ENCRYPT(@newPassword, CONCAT('\$6\$rounds=5000$',@salt))
 WHERE USER.ID=@uid
@@ -28,6 +29,6 @@ AND EXISTS (
 	AND USER.ID=@uid 
 );
 
-#delete_session
+#delete_sessions
 DELETE FROM USER_SESSION WHERE USER_SESSION.USER_ID=@uid;
 `

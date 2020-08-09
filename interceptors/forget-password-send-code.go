@@ -2,7 +2,6 @@ package interceptors
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/elgs/gostrgen"
 	"github.com/elgs/wsl"
@@ -25,25 +24,33 @@ func (this *ForgetPasswordSendCodeInterceptor) Before(tx *sql.Tx, context map[st
 	return nil
 }
 
-func (this *ForgetPasswordSendCodeInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int, scriptLabel string, cumulativeResults map[interface{}]interface{}) (bool, error) {
-	if scriptIndex == 5 {
-		fmt.Println(cumulativeResults)
+func (this *ForgetPasswordSendCodeInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int, scriptLabel string, cumulativeResults map[string]interface{}) (bool, error) {
+
+	if skipAll, ok := context["skip_all"].(bool); ok && skipAll {
+		return true, nil
 	}
 
 	return false, nil
 }
 
-func (this *ForgetPasswordSendCodeInterceptor) AfterEach(tx *sql.Tx, context map[string]interface{}, scriptIndex int, scriptLabel string, result interface{}, cumulativeResults map[interface{}]interface{}) error {
+func (this *ForgetPasswordSendCodeInterceptor) AfterEach(tx *sql.Tx, context map[string]interface{}, scriptIndex int, scriptLabel string, result interface{}, cumulativeResults map[string]interface{}) error {
 
-	if val, ok := result.([]map[string]string); ok && len(val) == 1 {
-		email := val[0]["email"]
-		userFlagCode := context["forget_password"]
-
-		if wslApp, ok := context["app"].(*wsl.WSL); ok {
-			err := wslApp.SendMail(email, "Password Reset Verification Code", userFlagCode.(string), email)
-			if err != nil {
-				return err
+	if scriptLabel == "get_uid_email" {
+		if results, ok := result.([]map[string]string); ok && len(results) == 1 {
+			email := results[0]["email"]
+			userFlagCode := context["forget_password"]
+			if results[0]["uid"] != "" && email != "" {
+				if wslApp, ok := context["app"].(*wsl.WSL); ok {
+					err := wslApp.SendMail(email, "Password Reset Verification Code", userFlagCode.(string), email)
+					if err != nil {
+						return err
+					}
+				}
+			} else {
+				context["skip_all"] = true
 			}
+		} else {
+			context["skip_all"] = true
 		}
 	}
 

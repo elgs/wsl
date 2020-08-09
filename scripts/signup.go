@@ -11,6 +11,7 @@ set @safe_id_1 := REPLACE(UUID(),'-','');
 set @salt := SHA2(RAND(), 512);
 set @now_utc := CONVERT_TZ(NOW(),'System','+0:0');
 
+#signup
 INSERT INTO USER SET 
 ID=@safe_id, 
 USERNAME=@username, 
@@ -19,6 +20,7 @@ PASSWORD=ENCRYPT(@password, CONCAT('\$6\$rounds=5000$',@salt)),
 MODE='',
 CREATED_TIME=@now_utc;
 
+#create_flag
 INSERT INTO USER_FLAG SET
 ID=@safe_id_1,
 USER_ID=@safe_id,

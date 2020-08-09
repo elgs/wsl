@@ -7,7 +7,7 @@ set @oldPassword := ?;
 
 set @salt := SHA2(RAND(), 512);
 
-#update_password
+#change_password
 UPDATE USER SET 
 USER.PASSWORD=ENCRYPT(@newPassword, CONCAT('\$6\$rounds=5000$',@salt))
 WHERE USER.PASSWORD=ENCRYPT(@oldPassword, USER.PASSWORD)
@@ -17,6 +17,6 @@ AND EXISTS(
 	AND USER_SESSION.ID='__session_id'
 );
 
-#delete_session
-delete FROM USER_SESSION WHERE USER_ID='__user_id' AND USER_SESSION.ID!='__session_id';
+#delete_sessions
+DELETE FROM USER_SESSION WHERE USER_ID='__user_id' AND USER_SESSION.ID!='__session_id';
 `

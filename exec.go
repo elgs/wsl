@@ -19,8 +19,8 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 
 	params["case"] = "lower"
 
-	exportedResults := map[interface{}]interface{}{}
-	cumulativeResults := map[interface{}]interface{}{}
+	exportedResults := map[string]interface{}{}
+	cumulativeResults := map[string]interface{}{}
 	var result interface{}
 
 	tx, err := db.Begin()
@@ -104,9 +104,9 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 				continue
 			}
 
-			var resultKey interface{} = label
+			resultKey := label
 			if resultKey == "" {
-				resultKey = index
+				resultKey = fmt.Sprint(index)
 			}
 
 			export := shouldExport(s)
@@ -169,9 +169,9 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 	}
 
 	var ret interface{} = exportedResults
-	if len(exportedResults) == 1 {
-		ret = exportedResults[0]
-	}
+	// if len(exportedResults) == 1 {
+	// 	ret = exportedResults[0]
+	// }
 
 	for _, li := range this.queryInterceptors[qID] {
 		err := li.After(tx, context, &ret, cumulativeResults)

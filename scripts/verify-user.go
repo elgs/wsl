@@ -4,6 +4,7 @@ var VerifyUser = `
 -- verification code
 set @vCode := ?;
 
+#delete_flag
 DELETE FROM USER_FLAG WHERE
 CODE='signup'
 AND VALUE=@vCode

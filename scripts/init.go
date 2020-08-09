@@ -9,7 +9,7 @@ set @safe_id := REPLACE(UUID(),'-','');
 set @salt := SHA2(RAND(), 512);
 set @now_utc := CONVERT_TZ(NOW(),'System','+0:0');
 
-CREATE TABLE IF NOT EXISTS USER (
+create TABLE IF NOT EXISTS USER (
   ID char(32) COLLATE utf8mb4_general_ci NOT NULL,
   USERNAME varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   EMAIL varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS USER (
   KEY idx_USER_CREATED_TIME (CREATED_TIME)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE USER_SESSION (
+create TABLE USER_SESSION (
 	ID char(32)COLLATE utf8mb4_general_ci NOT NULL,
 	USER_ID char(32) COLLATE utf8mb4_general_ci NOT NULL,
 	USERNAME varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE USER_SESSION (
 	KEY idx_USER_SESSION_LAST_SEEN_IP (LAST_SEEN_IP)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE USER_FLAG (
+create TABLE USER_FLAG (
 	ID char(32) COLLATE utf8mb4_general_ci NOT NULL,
 	USER_ID char(32) COLLATE utf8mb4_general_ci NOT NULL,
 	CODE varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
@@ -50,7 +50,8 @@ CREATE TABLE USER_FLAG (
 	PRIMARY KEY (ID),
 	UNIQUE KEY USER_ID (USER_ID,CODE)
  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
- 
+
+#init
 INSERT INTO USER SET 
 ID=@safe_id, 
 USERNAME='root', 
