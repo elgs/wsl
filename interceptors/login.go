@@ -11,9 +11,20 @@ type LoginInterceptor struct {
 	*wsl.DefaultInterceptor
 }
 
+func (this *LoginInterceptor) Before(tx *sql.Tx, context map[string]interface{}) error {
+	if val, ok := context["sqlParams"].(*[]interface{}); ok {
+		if len(*val) == 2 {
+			*val = append(*val, "")
+		} else if len(*val) >= 3 && (*val)[2] == nil {
+			(*val)[2] = ""
+		}
+	}
+	return nil
+}
+
 func (this *LoginInterceptor) AfterEach(tx *sql.Tx, context map[string]interface{}, scriptIndex int, scriptLabel string, result interface{}, cumulativeResults map[string]interface{}) error {
 
-	if scriptIndex == 5 {
+	if scriptLabel == "select_session" {
 		if val, ok := result.([]map[string]string); ok && len(val) == 1 {
 			context["session_id"] = val[0]["session_id"]
 			email := val[0]["email"]
@@ -32,7 +43,7 @@ func (this *LoginInterceptor) AfterEach(tx *sql.Tx, context map[string]interface
 	return nil
 }
 
-func (this *LoginInterceptor) After(tx *sql.Tx, context map[string]interface{}, results *interface{}, allResult interface{}) error {
+func (this *LoginInterceptor) After(tx *sql.Tx, context map[string]interface{}, results *interface{}, allResults interface{}) error {
 	if context["session_id"] == nil {
 		return errors.New("login_failed")
 	}

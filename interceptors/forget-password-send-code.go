@@ -24,7 +24,7 @@ func (this *ForgetPasswordSendCodeInterceptor) Before(tx *sql.Tx, context map[st
 	return nil
 }
 
-func (this *ForgetPasswordSendCodeInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams []interface{}, scriptIndex int, scriptLabel string, cumulativeResults map[string]interface{}) (bool, error) {
+func (this *ForgetPasswordSendCodeInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams *[]interface{}, scriptIndex int, scriptLabel string, cumulativeResults map[string]interface{}) (bool, error) {
 
 	if skipAll, ok := context["skip_all"].(bool); ok && skipAll {
 		return true, nil

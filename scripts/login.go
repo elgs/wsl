@@ -4,15 +4,17 @@ var Login = `
 -- username or email, password
 set @username := ?;
 set @password := ?;
+set @origin := ?;
 
 set @safe_id := REPLACE(UUID(),'-','');
 set @now_utc := CONVERT_TZ(NOW(),'System','+0:0');
 
 insert INTO USER_SESSION
-SELECT @safe_id, ID,USERNAME,EMAIL,@now_utc,@now_utc,'__client_ip','__client_ip'
+SELECT @safe_id, ID,USERNAME,EMAIL,@now_utc,@now_utc,'__client_ip','__client_ip',@origin
 FROM USER WHERE (USERNAME=@username OR EMAIL=@username) 
 AND PASSWORD=ENCRYPT(@password, PASSWORD);
 
+#select_session
 select 
 USER_SESSION.ID AS SESSION_ID, USER.EMAIL, USER_FLAG.CODE, USER_FLAG.VALUE
 FROM USER 

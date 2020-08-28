@@ -10,7 +10,7 @@ type VerifyUserInterceptor struct {
 	*wsl.DefaultInterceptor
 }
 
-func (this *VerifyUserInterceptor) After(tx *sql.Tx, context map[string]interface{}, results *interface{}, allResult interface{}) error {
+func (this *VerifyUserInterceptor) After(tx *sql.Tx, context map[string]interface{}, results *interface{}, allResults interface{}) error {
 	if session, ok := context["session"].(map[string]interface{}); ok {
 		if flags, ok := session["flags"].(map[string]interface{}); ok {
 			delete(flags, "signup")

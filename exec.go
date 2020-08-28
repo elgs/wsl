@@ -13,8 +13,11 @@ import (
 
 func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]interface{}, context map[string]interface{}) (interface{}, error) {
 
+	sqlParams := extractParamsFromMap(params)
+
 	context["scripts"] = &scripts
 	context["params"] = params
+	context["sqlParams"] = &sqlParams
 	context["app"] = this
 
 	params["case"] = "lower"
@@ -62,7 +65,6 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 		}
 
 		// single underscore
-		sqlParams := extractParamsFromMap(params)
 		totalCount := 0
 		for index, s := range scriptsArray {
 			label, s := splitSqlLable(s)
@@ -89,8 +91,9 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 			}
 
 			skipSql := false
+			localSqlParams := sqlParams[totalCount-count : totalCount]
 			for _, li := range this.queryInterceptors[qID] {
-				skip, err := li.BeforeEach(tx, context, &s, sqlParams[totalCount-count:totalCount], index, label, cumulativeResults)
+				skip, err := li.BeforeEach(tx, context, &s, &localSqlParams, index, label, cumulativeResults)
 				if err != nil {
 					tx.Rollback()
 					return nil, err
@@ -112,7 +115,7 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 			export := shouldExport(s)
 			if isQuery(s) {
 				if format == "array" {
-					header, data, err := gosqljson.QueryTxToArray(tx, theCase, s, sqlParams[totalCount-count:totalCount]...)
+					header, data, err := gosqljson.QueryTxToArray(tx, theCase, s, localSqlParams...)
 					data = append([][]string{header}, data...)
 					if err != nil {
 						tx.Rollback()
@@ -128,7 +131,7 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 					}
 					result = data
 				} else {
-					result, err = gosqljson.QueryTxToMap(tx, theCase, s, sqlParams[totalCount-count:totalCount]...)
+					result, err = gosqljson.QueryTxToMap(tx, theCase, s, localSqlParams...)
 					if err != nil {
 						tx.Rollback()
 						ierr := this.interceptError(qID, &err)
@@ -143,7 +146,7 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 					}
 				}
 			} else {
-				result, err = gosqljson.ExecTx(tx, s, sqlParams[totalCount-count:totalCount]...)
+				result, err = gosqljson.ExecTx(tx, s, localSqlParams...)
 				if err != nil {
 					tx.Rollback()
 					ierr := this.interceptError(qID, &err)
