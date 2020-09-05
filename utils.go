@@ -45,7 +45,7 @@ func extractParamsFromMap(m map[string]interface{}) []interface{} {
 	return ret
 }
 
-func extractScriptParamsFromMap(m map[string]interface{}) map[string]interface{} {
+func ExtractScriptParamsFromMap(m map[string]interface{}) map[string]interface{} {
 	ret := map[string]interface{}{}
 	for k, v := range m {
 		if strings.HasPrefix(k, "__") {
@@ -72,7 +72,7 @@ func valuesToMap(keyLowerCase bool, values ...map[string][]string) map[string]in
 }
 
 // true if the first character is uppercase, false otherwise
-func shouldExport(sql string) bool {
+func ShouldExport(sql string) bool {
 	if !unicode.IsLetter([]rune(sql)[0]) {
 		return false
 	}
@@ -80,7 +80,7 @@ func shouldExport(sql string) bool {
 }
 
 // return whether export the result of this sql statement or not
-func sqlNormalize(sql *string) {
+func SqlNormalize(sql *string) {
 	*sql = strings.TrimSpace(*sql)
 	var ret string
 	lines := strings.Split(*sql, "\n")
@@ -93,7 +93,7 @@ func sqlNormalize(sql *string) {
 	*sql = ret
 }
 
-func splitSqlLable(sql string) (label string, s string) {
+func SplitSqlLable(sql string) (label string, s string) {
 	sql = strings.TrimSpace(sql)
 	if strings.HasPrefix(sql, "#") {
 		ss := strings.Fields(sql)
@@ -113,7 +113,7 @@ func sqlSafe(s *string) {
 	*s = strings.Replace(*s, "--", "", -1)
 }
 
-func isQuery(sql string) bool {
+func IsQuery(sql string) bool {
 	sqlUpper := strings.ToUpper(strings.TrimSpace(sql))
 	if strings.HasPrefix(sqlUpper, "SELECT") ||
 		strings.HasPrefix(sqlUpper, "SHOW") ||

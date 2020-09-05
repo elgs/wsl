@@ -64,17 +64,16 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 			return nil, err
 		}
 
-		// single underscore
 		totalCount := 0
 		for index, s := range scriptsArray {
-			label, s := splitSqlLable(s)
-			sqlNormalize(&s)
+			label, s := SplitSqlLable(s)
+			SqlNormalize(&s)
 			if len(s) == 0 {
 				continue
 			}
 
 			// double underscore
-			scriptParams := extractScriptParamsFromMap(params)
+			scriptParams := ExtractScriptParamsFromMap(params)
 			for k, v := range scriptParams {
 				s = strings.Replace(s, k, v.(string), -1)
 			}
@@ -112,8 +111,8 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 				resultKey = fmt.Sprint(index)
 			}
 
-			export := shouldExport(s)
-			if isQuery(s) {
+			export := ShouldExport(s)
+			if IsQuery(s) {
 				if format == "array" {
 					header, data, err := gosqljson.QueryTxToArray(tx, theCase, s, localSqlParams...)
 					data = append([][]string{header}, data...)

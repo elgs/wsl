@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/robfig/cron"
 )
 
 type WSL struct {
@@ -22,6 +24,11 @@ type WSL struct {
 	// Interceptors that is guaranteed to be executed in its list order on each
 	// query.
 	queryInterceptors map[string][]Interceptor
+
+	// jobs is the registry for cron jobs
+	Jobs map[string]*Job
+
+	Cron *cron.Cron
 }
 
 func NewWithConfigPath(confPath string) (*WSL, error) {
@@ -41,6 +48,8 @@ func NewWithConfigJSON(confFile string) (*WSL, error) {
 		Scripts:           map[string]string{},
 		Databases:         map[string]*sql.DB{},
 		queryInterceptors: map[string][]Interceptor{},
+		Jobs:              map[string]*Job{},
+		Cron:              cron.New(),
 	}
 	err = wsl.LoadScripts("")
 	return wsl, err
@@ -65,6 +74,17 @@ func (this *WSL) Start() {
 			return
 		}
 	}
+
+	for _, b := range this.Jobs {
+		entryId, err := this.Cron.AddFunc(b.Cron, b.MakeFunc(this))
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		b.Id = &entryId
+	}
+
+	this.Cron.Start()
 
 	http.HandleFunc("/", this.defaultHandler)
 	// http.HandleFunc("/ws", this.wsHandler)
