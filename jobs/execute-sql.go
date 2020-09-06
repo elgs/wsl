@@ -50,21 +50,19 @@ func executeSQL(db *sql.DB, scripts string, sqlParams *[]interface{}) func() {
 			localSqlParams := (*sqlParams)[totalCount-count : totalCount]
 
 			if wsl.IsQuery(s) {
-				result, err := gosqljson.QueryTxToMap(tx, "lower", s, localSqlParams...)
+				_, err := gosqljson.QueryTxToMap(tx, "lower", s, localSqlParams...)
 				if err != nil {
 					tx.Rollback()
 					fmt.Println(err)
 					return
 				}
-				fmt.Println(result)
 			} else {
-				result, err := gosqljson.ExecTx(tx, s, localSqlParams...)
+				_, err := gosqljson.ExecTx(tx, s, localSqlParams...)
 				if err != nil {
 					tx.Rollback()
 					fmt.Println(err)
 					return
 				}
-				fmt.Println(result)
 			}
 		}
 		tx.Commit()
