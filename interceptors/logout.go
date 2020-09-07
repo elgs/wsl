@@ -13,7 +13,7 @@ type LogoutInterceptor struct {
 func (this *LogoutInterceptor) After(tx *sql.Tx, context map[string]interface{}, results *interface{}, allResults interface{}) error {
 	// params := context["params"].(map[string]interface{})
 	if val, ok := context["session_id"].(string); ok {
-		delete(sessions, val)
+		delete(Sessions, val)
 	}
 	return nil
 }

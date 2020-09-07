@@ -34,10 +34,10 @@ LAST_SEEN_IP=?
 WHERE ID=?
 `
 
-var sessions = make(map[string]map[string]interface{})
+var Sessions = make(map[string]map[string]interface{})
 
 func (this *AuthInterceptor) getSession(tx *sql.Tx, sessionId string) (map[string]interface{}, error) {
-	if val, ok := sessions[sessionId]; ok {
+	if val, ok := Sessions[sessionId]; ok {
 		return val, nil
 	}
 
@@ -48,7 +48,7 @@ func (this *AuthInterceptor) getSession(tx *sql.Tx, sessionId string) (map[strin
 	if len(dbResult) != 1 {
 		return nil, errors.New("session_not_found")
 	}
-	sessions[sessionId], err = wsl.ConvertMapOfStringsToMapOfInterfaces(dbResult[0])
+	Sessions[sessionId], err = wsl.ConvertMapOfStringsToMapOfInterfaces(dbResult[0])
 	if err != nil {
 		return nil, err
 	}
@@ -69,9 +69,9 @@ func (this *AuthInterceptor) getSession(tx *sql.Tx, sessionId string) (map[strin
 		}
 	}
 
-	sessions[sessionId]["flags"] = userFlagsMap
+	Sessions[sessionId]["flags"] = userFlagsMap
 
-	return sessions[sessionId], nil
+	return Sessions[sessionId], nil
 }
 
 func (this *AuthInterceptor) getUserFlags(tx *sql.Tx, userId string) ([]map[string]string, error) {

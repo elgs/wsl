@@ -9,11 +9,15 @@ import (
 	"github.com/elgs/wsl"
 )
 
-func executeSQL(db *sql.DB, scripts string, sqlParams *[]interface{}) func() {
+func executeSQL(db *sql.DB, scripts string, sqlParams *[]interface{}, before func(), after func(map[string]interface{})) func() {
 	if sqlParams == nil {
 		sqlParams = &[]interface{}{}
 	}
 	return func() {
+		if before != nil {
+			before()
+		}
+		exportedResults := map[string]interface{}{}
 		tx, err := db.Begin()
 		if err != nil {
 			fmt.Println(err)
@@ -28,7 +32,8 @@ func executeSQL(db *sql.DB, scripts string, sqlParams *[]interface{}) func() {
 		}
 
 		totalCount := 0
-		for _, s := range scriptsArray {
+		for index, s := range scriptsArray {
+			label, s := wsl.SplitSqlLable(s)
 			wsl.SqlNormalize(&s)
 			if len(s) == 0 {
 				continue
@@ -49,22 +54,38 @@ func executeSQL(db *sql.DB, scripts string, sqlParams *[]interface{}) func() {
 
 			localSqlParams := (*sqlParams)[totalCount-count : totalCount]
 
+			resultKey := label
+			if resultKey == "" {
+				resultKey = fmt.Sprint(index)
+			}
+
+			export := wsl.ShouldExport(s)
+
 			if wsl.IsQuery(s) {
-				_, err := gosqljson.QueryTxToMap(tx, "lower", s, localSqlParams...)
+				result, err := gosqljson.QueryTxToMap(tx, "lower", s, localSqlParams...)
 				if err != nil {
 					tx.Rollback()
 					fmt.Println(err)
 					return
 				}
+				if export {
+					exportedResults[resultKey] = result
+				}
 			} else {
-				_, err := gosqljson.ExecTx(tx, s, localSqlParams...)
+				result, err := gosqljson.ExecTx(tx, s, localSqlParams...)
 				if err != nil {
 					tx.Rollback()
 					fmt.Println(err)
 					return
+				}
+				if export {
+					exportedResults[resultKey] = result
 				}
 			}
 		}
 		tx.Commit()
+		if after != nil {
+			after(exportedResults)
+		}
 	}
 }
