@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/robfig/cron"
+	"github.com/robfig/cron/v3"
 )
 
 type WSL struct {
