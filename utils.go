@@ -79,7 +79,7 @@ func ShouldExport(sql string) bool {
 	return strings.ToUpper(sql[0:1]) == sql[0:1]
 }
 
-// returns whether export the result of this sql statement or not
+// returns whether to export the result of this sql statement or not
 func SqlNormalize(sql *string) {
 	*sql = strings.TrimSpace(*sql)
 	var ret string
