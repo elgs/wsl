@@ -34,9 +34,9 @@ LAST_SEEN_IP=?
 WHERE ID=?
 `
 
-var Sessions = make(map[string]map[string]interface{})
+var Sessions = make(map[string]map[string]any)
 
-func (this *AuthInterceptor) getSession(tx *sql.Tx, sessionId string) (map[string]interface{}, error) {
+func (this *AuthInterceptor) getSession(tx *sql.Tx, sessionId string) (map[string]any, error) {
 	if val, ok := Sessions[sessionId]; ok {
 		return val, nil
 	}
@@ -59,7 +59,7 @@ func (this *AuthInterceptor) getSession(tx *sql.Tx, sessionId string) (map[strin
 		return nil, err
 	}
 
-	userFlagsMap := make(map[string]interface{})
+	userFlagsMap := make(map[string]any)
 	for _, flag := range userFlags {
 		private := flag["private"]
 		if private == "1" {
@@ -86,9 +86,9 @@ type AuthInterceptor struct {
 	*wsl.DefaultInterceptor
 }
 
-func (this *AuthInterceptor) Before(tx *sql.Tx, context map[string]interface{}) error {
+func (this *AuthInterceptor) Before(tx *sql.Tx, context map[string]any) error {
 
-	params := context["params"].(map[string]interface{})
+	params := context["params"].(map[string]any)
 
 	if tokenString, ok := context["access_token"].(string); ok {
 
@@ -98,7 +98,7 @@ func (this *AuthInterceptor) Before(tx *sql.Tx, context map[string]interface{}) 
 		}
 		if app, ok := context["app"].(*wsl.WSL); ok {
 			db := app.Databases["main"]
-			if params, ok := context["params"].(map[string]interface{}); ok {
+			if params, ok := context["params"].(map[string]any); ok {
 				clientIp := params["__client_ip"]
 				go this.updateLastSeen(db, tokenString, clientIp.(string))
 			}

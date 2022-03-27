@@ -11,8 +11,8 @@ type LoginInterceptor struct {
 	*wsl.DefaultInterceptor
 }
 
-func (this *LoginInterceptor) Before(tx *sql.Tx, context map[string]interface{}) error {
-	if val, ok := context["sqlParams"].(*[]interface{}); ok {
+func (this *LoginInterceptor) Before(tx *sql.Tx, context map[string]any) error {
+	if val, ok := context["sqlParams"].(*[]any); ok {
 		if len(*val) == 2 {
 			*val = append(*val, "")
 		} else if len(*val) >= 3 && (*val)[2] == nil {
@@ -22,7 +22,7 @@ func (this *LoginInterceptor) Before(tx *sql.Tx, context map[string]interface{})
 	return nil
 }
 
-func (this *LoginInterceptor) AfterEach(tx *sql.Tx, context map[string]interface{}, scriptIndex int, scriptLabel string, result interface{}, cumulativeResults map[string]interface{}) error {
+func (this *LoginInterceptor) AfterEach(tx *sql.Tx, context map[string]any, scriptIndex int, scriptLabel string, result any, cumulativeResults map[string]any) error {
 
 	if scriptLabel == "select_session" {
 		if val, ok := result.([]map[string]string); ok && len(val) == 1 {
@@ -43,10 +43,10 @@ func (this *LoginInterceptor) AfterEach(tx *sql.Tx, context map[string]interface
 	return nil
 }
 
-func (this *LoginInterceptor) After(tx *sql.Tx, context map[string]interface{}, results *interface{}, allResults interface{}) error {
+func (this *LoginInterceptor) After(tx *sql.Tx, context map[string]any, results *any, allResults any) error {
 	if context["session_id"] == nil {
 		return errors.New("login_failed")
 	}
-	*results = map[string]interface{}{"access_token": context["session_id"]}
+	*results = map[string]any{"access_token": context["session_id"]}
 	return nil
 }

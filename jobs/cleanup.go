@@ -25,7 +25,7 @@ var cleanup = &wsl.Job{
 		delete FROM USER_FLAG WHERE CREATED_TIME < (@now_utc - INTERVAL 1 HOUR);
 		`
 
-		after := func(result map[string]interface{}) {
+		after := func(result map[string]any) {
 			for _, sessions := range result {
 				if ss, ok := sessions.([]map[string]string); ok {
 					for _, session := range ss {

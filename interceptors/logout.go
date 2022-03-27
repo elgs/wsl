@@ -10,8 +10,8 @@ type LogoutInterceptor struct {
 	*wsl.DefaultInterceptor
 }
 
-func (this *LogoutInterceptor) After(tx *sql.Tx, context map[string]interface{}, results *interface{}, allResults interface{}) error {
-	// params := context["params"].(map[string]interface{})
+func (this *LogoutInterceptor) After(tx *sql.Tx, context map[string]any, results *any, allResults any) error {
+	// params := context["params"].(map[string]any)
 	if val, ok := context["session_id"].(string); ok {
 		delete(Sessions, val)
 	}

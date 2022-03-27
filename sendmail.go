@@ -8,7 +8,7 @@ import (
 )
 
 func (this *WSL) SendMail(from, subject, body string, to ...string) error {
-	return sendMail(this.Config.Mail.MailHost, this.Config.Mail.MailUsername, this.Config.Mail.MailPassword,
+	return sendMail(this.Config.Mail.Host, this.Config.Mail.Username, this.Config.Mail.Password,
 		from, subject, body, to...)
 }
 

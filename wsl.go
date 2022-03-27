@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -13,7 +14,6 @@ import (
 
 type WSL struct {
 	Config    *Config
-	Scripts   map[string]string
 	Databases map[string]*sql.DB
 
 	// globalInterceptors is the registry of a list of Interceptors that is
@@ -29,16 +29,19 @@ type WSL struct {
 	Jobs map[string]*Job
 
 	Cron *cron.Cron
+
+	Scripts map[string]string
 }
 
 func NewWithConfigPath(confPath string) (*WSL, error) {
 	confFile := flag.String("c", confPath, "configration file path")
 	flag.Parse()
+	path.Dir(*confFile)
 
-	return NewWithConfigJSON(*confFile)
+	return New(*confFile, "")
 }
 
-func NewWithConfigJSON(confFile string) (*WSL, error) {
+func New(confFile string, basePath string) (*WSL, error) {
 	config, err := NewConfig(confFile)
 	if err != nil {
 		return nil, err
@@ -51,14 +54,13 @@ func NewWithConfigJSON(confFile string) (*WSL, error) {
 		Jobs:              map[string]*Job{},
 		Cron:              cron.New(),
 	}
-	err = wsl.LoadScripts("")
 	return wsl, err
 }
 
 func (this *WSL) connectToDb(dbName string) error {
 	if this.Databases[dbName] == nil {
-		dbData := this.Config.Databases[dbName].(map[string]interface{})
-		db, err := sql.Open(dbData["db_type"].(string), dbData["db_url"].(string))
+		dbData := this.Config.Databases[dbName]
+		db, err := sql.Open(dbData.Type, dbData.Url)
 		if err != nil {
 			return err
 		}
@@ -81,7 +83,7 @@ func (this *WSL) Start() {
 			log.Println(err)
 			return
 		}
-		b.Id = &entryId
+		b.ID = &entryId
 	}
 
 	this.Cron.Start()
@@ -89,7 +91,7 @@ func (this *WSL) Start() {
 	http.HandleFunc("/", this.defaultHandler)
 	// http.HandleFunc("/ws", this.wsHandler)
 
-	if this.Config.httpEnabled() {
+	if this.Config.Web.HttpAddr != "" {
 		srv := &http.Server{
 			Addr:         this.Config.Web.HttpAddr,
 			WriteTimeout: 15 * time.Second,
@@ -101,7 +103,7 @@ func (this *WSL) Start() {
 		}()
 	}
 
-	if this.Config.httpsEnabled() {
+	if this.Config.Web.HttpsAddr != "" {
 		srvs := &http.Server{
 			Addr:         this.Config.Web.HttpsAddr,
 			WriteTimeout: 15 * time.Second,

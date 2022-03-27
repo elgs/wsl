@@ -30,11 +30,11 @@ func Hook() {
 	fmt.Println("Bye!")
 }
 
-func extractParamsFromMap(m map[string]interface{}) []interface{} {
-	if params, ok := m["params"].([]interface{}); ok {
+func extractParamsFromMap(m map[string]any) []any {
+	if params, ok := m["params"].([]any); ok {
 		return params
 	}
-	ret := []interface{}{}
+	ret := []any{}
 	for i := 0; ; i++ {
 		if val, ok := m[fmt.Sprint("_", i)]; ok {
 			ret = append(ret, val)
@@ -45,8 +45,8 @@ func extractParamsFromMap(m map[string]interface{}) []interface{} {
 	return ret
 }
 
-func ExtractScriptParamsFromMap(m map[string]interface{}) map[string]interface{} {
-	ret := map[string]interface{}{}
+func ExtractScriptParamsFromMap(m map[string]any) map[string]any {
+	ret := map[string]any{}
 	for k, v := range m {
 		if strings.HasPrefix(k, "__") {
 			vs := v.(string)
@@ -57,8 +57,8 @@ func ExtractScriptParamsFromMap(m map[string]interface{}) map[string]interface{}
 	return ret
 }
 
-func valuesToMap(keyLowerCase bool, values ...map[string][]string) map[string]interface{} {
-	ret := map[string]interface{}{}
+func valuesToMap(keyLowerCase bool, values ...map[string][]string) map[string]any {
+	ret := map[string]any{}
 	for _, vs := range values {
 		for k, v := range vs {
 			if keyLowerCase {
@@ -124,15 +124,15 @@ func IsQuery(sql string) bool {
 	return false
 }
 
-var ConvertStringArrayToInterfaceArray = func(arrayOfStrings []string) []interface{} {
-	ret := []interface{}{}
+var ConvertStringArrayToInterfaceArray = func(arrayOfStrings []string) []any {
+	ret := []any{}
 	for _, v := range arrayOfStrings {
 		ret = append(ret, v)
 	}
 	return ret
 }
 
-var ConvertInterfaceArrayToStringArray = func(arrayOfInterfaces []interface{}) ([]string, error) {
+var ConvertInterfaceArrayToStringArray = func(arrayOfInterfaces []any) ([]string, error) {
 	ret := []string{}
 	for _, v := range arrayOfInterfaces {
 		if s, ok := v.(string); ok {
@@ -144,7 +144,7 @@ var ConvertInterfaceArrayToStringArray = func(arrayOfInterfaces []interface{}) (
 	return ret, nil
 }
 
-var ConvertMapOfInterfacesToMapOfStrings = func(data map[string]interface{}) (map[string]string, error) {
+var ConvertMapOfInterfacesToMapOfStrings = func(data map[string]any) (map[string]string, error) {
 	if data == nil {
 		return nil, errors.New("Cannot convert nil.")
 	}
@@ -158,13 +158,25 @@ var ConvertMapOfInterfacesToMapOfStrings = func(data map[string]interface{}) (ma
 	return ret, nil
 }
 
-var ConvertMapOfStringsToMapOfInterfaces = func(data map[string]string) (map[string]interface{}, error) {
+var ConvertMapOfStringsToMapOfInterfaces = func(data map[string]string) (map[string]any, error) {
 	if data == nil {
 		return nil, errors.New("Cannot convert nil.")
 	}
-	ret := map[string]interface{}{}
+	ret := map[string]any{}
 	for k, v := range data {
 		ret[k] = v
 	}
 	return ret, nil
+}
+
+func HandleError(err error) {
+	if err != nil {
+		panic((err))
+	}
+}
+
+func PrintError() {
+	if err := recover(); err != nil {
+		fmt.Println(err)
+	}
 }

@@ -1,7 +1,5 @@
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/elgs/gojq v0.0.0-20201120033525-b5293fef2759 h1:WtAKk9RULee8RXnR3to5hg7TrsPVCdxYVrOZRjR54LU=
-github.com/elgs/gojq v0.0.0-20201120033525-b5293fef2759/go.mod h1:rQELVIqRXpraeUryHOBadz99ePvEVQmTVpGr8M9QQ4Q=
 github.com/elgs/gosplitargs v0.0.0-20161028071935-a491c5eeb3c8 h1:bD2/rCXwgXJm2vgoSSSCM9IPjVFfEoQFFblzg7HHABI=
 github.com/elgs/gosplitargs v0.0.0-20161028071935-a491c5eeb3c8/go.mod h1:o4DgpccPNAQAlPSxo7I4L/LWNh2oyr/BBGSynrLTmZM=
 github.com/elgs/gosqljson v0.0.0-20160403005647-027aa4915315 h1:0NXTHkloWMqOB1KHv1pZ/LAXsq9mhH0VsqyBu0MjB1Q=

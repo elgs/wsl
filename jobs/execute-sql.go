@@ -9,15 +9,15 @@ import (
 	"github.com/elgs/wsl"
 )
 
-func executeSQL(db *sql.DB, scripts string, sqlParams *[]interface{}, before func(), after func(map[string]interface{})) func() {
+func executeSQL(db *sql.DB, scripts string, sqlParams *[]any, before func(), after func(map[string]any)) func() {
 	if sqlParams == nil {
-		sqlParams = &[]interface{}{}
+		sqlParams = &[]any{}
 	}
 	return func() {
 		if before != nil {
 			before()
 		}
-		exportedResults := map[string]interface{}{}
+		exportedResults := map[string]any{}
 		tx, err := db.Begin()
 		if err != nil {
 			fmt.Println(err)

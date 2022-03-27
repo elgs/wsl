@@ -11,10 +11,10 @@ type ResetPasswordInterceptor struct {
 	*wsl.DefaultInterceptor
 }
 
-func (this *ResetPasswordInterceptor) Before(tx *sql.Tx, context map[string]interface{}) error {
+func (this *ResetPasswordInterceptor) Before(tx *sql.Tx, context map[string]any) error {
 
-	if session, ok := context["session"].(map[string]interface{}); ok {
-		if flags, ok := session["flags"].(map[string]interface{}); ok {
+	if session, ok := context["session"].(map[string]any); ok {
+		if flags, ok := session["flags"].(map[string]any); ok {
 			if flags["signup"] != nil {
 				return errors.New("user_not_verified")
 			}
@@ -30,7 +30,7 @@ func (this *ResetPasswordInterceptor) Before(tx *sql.Tx, context map[string]inte
 	return nil
 }
 
-func (this *ResetPasswordInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams *[]interface{}, scriptIndex int, scriptLabel string, cumulativeResults map[string]interface{}) (bool, error) {
+func (this *ResetPasswordInterceptor) BeforeEach(tx *sql.Tx, context map[string]any, script *string, sqlParams *[]any, scriptIndex int, scriptLabel string, cumulativeResults map[string]any) (bool, error) {
 	if scriptLabel == "delete_sessions" {
 		if cumulativeResults["reset_password"] == int64(0) {
 			// if password is not changed, skip deleting other sessions

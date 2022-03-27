@@ -11,7 +11,7 @@ import (
 	"github.com/elgs/gosqljson"
 )
 
-func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]interface{}, context map[string]interface{}) (interface{}, error) {
+func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]any, context map[string]any) (any, error) {
 
 	sqlParams := extractParamsFromMap(params)
 
@@ -22,9 +22,9 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 
 	params["case"] = "lower"
 
-	exportedResults := map[string]interface{}{}
-	cumulativeResults := map[string]interface{}{}
-	var result interface{}
+	exportedResults := map[string]any{}
+	cumulativeResults := map[string]any{}
+	var result any
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -170,7 +170,7 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 		}
 	}
 
-	var ret interface{} = exportedResults
+	var ret any = exportedResults
 	// if len(exportedResults) == 1 {
 	// 	ret = exportedResults[0]
 	// }

@@ -11,18 +11,18 @@ type VerifyUserInterceptor struct {
 	*wsl.DefaultInterceptor
 }
 
-func (this *VerifyUserInterceptor) Before(tx *sql.Tx, context map[string]interface{}) error {
+func (this *VerifyUserInterceptor) Before(tx *sql.Tx, context map[string]any) error {
 
-	if _, ok := context["session"].(map[string]interface{}); !ok {
+	if _, ok := context["session"].(map[string]any); !ok {
 		return errors.New("invalid_session")
 	}
 
 	return nil
 }
 
-func (this *VerifyUserInterceptor) After(tx *sql.Tx, context map[string]interface{}, results *interface{}, allResults interface{}) error {
-	if session, ok := context["session"].(map[string]interface{}); ok {
-		if flags, ok := session["flags"].(map[string]interface{}); ok {
+func (this *VerifyUserInterceptor) After(tx *sql.Tx, context map[string]any, results *any, allResults any) error {
+	if session, ok := context["session"].(map[string]any); ok {
+		if flags, ok := session["flags"].(map[string]any); ok {
 			delete(flags, "signup")
 		}
 	}

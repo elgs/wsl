@@ -5,7 +5,7 @@ import (
 )
 
 type Job struct {
-	Id       *cron.EntryID
+	ID       *cron.EntryID
 	Cron     string
 	MakeFunc func(*WSL) func()
 }

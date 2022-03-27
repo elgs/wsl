@@ -9,28 +9,28 @@ import (
 // executed. An example would be to provide additional input parameters for
 // the query, or convert the result to other formats.
 type Interceptor interface {
-	Before(tx *sql.Tx, context map[string]interface{}) error
-	BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams *[]interface{}, scriptIndex int, scriptLabel string, cumulativeResults map[string]interface{}) (bool, error)
-	AfterEach(tx *sql.Tx, context map[string]interface{}, scriptIndex int, scriptLabel string, result interface{}, cumulativeResults map[string]interface{}) error
-	After(tx *sql.Tx, context map[string]interface{}, results *interface{}, allResults interface{}) error
+	Before(tx *sql.Tx, context map[string]any) error
+	BeforeEach(tx *sql.Tx, context map[string]any, script *string, sqlParams *[]any, scriptIndex int, scriptLabel string, cumulativeResults map[string]any) (bool, error)
+	AfterEach(tx *sql.Tx, context map[string]any, scriptIndex int, scriptLabel string, result any, cumulativeResults map[string]any) error
+	After(tx *sql.Tx, context map[string]any, results *any, allResults any) error
 	OnError(err *error) error
 }
 
 type DefaultInterceptor struct{}
 
-func (this *DefaultInterceptor) Before(tx *sql.Tx, context map[string]interface{}) error {
+func (this *DefaultInterceptor) Before(tx *sql.Tx, context map[string]any) error {
 	return nil
 }
 
-func (this *DefaultInterceptor) After(tx *sql.Tx, context map[string]interface{}, results *interface{}, allResults interface{}) error {
+func (this *DefaultInterceptor) After(tx *sql.Tx, context map[string]any, results *any, allResults any) error {
 	return nil
 }
 
-func (this *DefaultInterceptor) BeforeEach(tx *sql.Tx, context map[string]interface{}, script *string, sqlParams *[]interface{}, scriptIndex int, scriptLabel string, cumulativeResults map[string]interface{}) (bool, error) {
+func (this *DefaultInterceptor) BeforeEach(tx *sql.Tx, context map[string]any, script *string, sqlParams *[]any, scriptIndex int, scriptLabel string, cumulativeResults map[string]any) (bool, error) {
 	return false, nil
 }
 
-func (this *DefaultInterceptor) AfterEach(tx *sql.Tx, context map[string]interface{}, scriptIndex int, scriptLabel string, result interface{}, cumulativeResults map[string]interface{}) error {
+func (this *DefaultInterceptor) AfterEach(tx *sql.Tx, context map[string]any, scriptIndex int, scriptLabel string, result any, cumulativeResults map[string]any) error {
 	return nil
 }
 

@@ -3,11 +3,14 @@ package wsl
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -39,8 +42,8 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	script := this.Scripts[qID]
 
 	sepIndex := strings.LastIndex(r.RemoteAddr, ":")
-	clientIp := r.RemoteAddr[0:sepIndex]
-	clientIp = strings.Replace(strings.Replace(clientIp, "[", "", -1), "]", "", -1)
+	clientIP := r.RemoteAddr[0:sepIndex]
+	clientIP = strings.Replace(strings.Replace(clientIP, "[", "", -1), "]", "", -1)
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -50,7 +53,7 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	var bodyData map[string]interface{}
+	var bodyData map[string]any
 	//intentionally ignore the errors
 	_ = json.Unmarshal(body, &bodyData)
 
@@ -72,9 +75,9 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		params[k] = v
 	}
 
-	params["__client_ip"] = clientIp
+	params["__client_ip"] = clientIP
 
-	context := map[string]interface{}{}
+	context := map[string]any{}
 
 	headers := valuesToMap(true, r.Header)
 	authHeader := headers["access_token"]
@@ -83,7 +86,7 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		authHeader = params["access_token"]
 	}
 
-	if authHeader != nil || authHeader == "" {
+	if authHeader != nil && authHeader != "" {
 		context["access_token"] = authHeader
 	}
 	result, err := this.exec(qID, this.Databases["main"], script, params, context)
@@ -104,6 +107,29 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	jsonString := string(jsonData)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	fmt.Fprint(w, jsonString)
+}
+
+func (this *WSL) LoadScripts(scriptName string) error {
+	wd, _ := os.Getwd()
+	scriptPath := path.Dir(wd)
+
+	return filepath.Walk(scriptPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Println(err)
+		}
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".sql") {
+			data, err := ioutil.ReadFile(path)
+			if err != nil {
+				log.Println(err)
+			}
+			scriptName := strings.TrimSuffix(info.Name(), ".sql")
+			this.Scripts[scriptName] = string(data)
+			if info.Name() == scriptName {
+				return io.EOF
+			}
+		}
+		return nil
+	})
 }
 
 // const (
@@ -148,7 +174,7 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 // 			break
 // 		}
 
-// 		var input map[string]interface{}
+// 		var input map[string]any
 
 // 		err = json.Unmarshal(message, &input)
 // 		if err != nil {
@@ -164,7 +190,7 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 // 		qID := query.(string)
 // 		script := this.Config.Db.Scripts[qID]
 
-// 		params, err := ConvertMapOfInterfacesToMapOfStrings(input["data"].(map[string]interface{}))
+// 		params, err := ConvertMapOfInterfacesToMapOfStrings(input["data"].(map[string]any))
 // 		if err != nil {
 // 			log.Println(err)
 // 			return
@@ -172,7 +198,7 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 // 		params["__client_ip"] = clientIp
 
-// 		context := map[string]interface{}{}
+// 		context := map[string]any{}
 
 // 		authHeader := input["access_token"]
 // 		if authHeader != nil {
@@ -185,7 +211,7 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 // 			return
 // 		}
 
-// 		ret := make(map[string]interface{})
+// 		ret := make(map[string]any)
 // 		ret["data"] = result
 // 		if tokenString, ok := context["token"]; ok {
 // 			ret["token"] = tokenString.(string)

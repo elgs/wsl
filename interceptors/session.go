@@ -10,7 +10,7 @@ type SessionInterceptor struct {
 	*wsl.DefaultInterceptor
 }
 
-func (this *SessionInterceptor) After(tx *sql.Tx, context map[string]interface{}, results *interface{}, allResults interface{}) error {
+func (this *SessionInterceptor) After(tx *sql.Tx, context map[string]any, results *any, allResults any) error {
 	*results = context["session"]
 	return nil
 }
