@@ -2,7 +2,7 @@ package interceptors
 
 import "github.com/elgs/wsl"
 
-func RegisterBuiltInInterceptors(app *wsl.WSL) {
+func RegisterBuiltInInterceptors(app *wsl.App) {
 	app.RegisterGlobalInterceptors(&AuthInterceptor{})
 
 	app.RegisterQueryInterceptors("signup", &SignupInterceptor{})

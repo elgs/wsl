@@ -7,7 +7,7 @@ import (
 
 var cleanup = &wsl.Job{
 	Cron: "@every 1h",
-	MakeFunc: func(app *wsl.WSL) func() {
+	MakeFunc: func(app *wsl.App) func() {
 		app.Scripts["cleanup"] = `
 		set @now_utc := CONVERT_TZ(NOW(),'System','+0:0');
 

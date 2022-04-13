@@ -7,9 +7,9 @@ import (
 type Job struct {
 	ID       *cron.EntryID
 	Cron     string
-	MakeFunc func(*WSL) func()
+	MakeFunc func(*App) func()
 }
 
-func (this *WSL) RegisterJob(name string, job *Job) {
+func (this *App) RegisterJob(name string, job *Job) {
 	this.Jobs[name] = job
 }

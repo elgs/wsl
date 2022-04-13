@@ -96,7 +96,7 @@ func (this *AuthInterceptor) Before(tx *sql.Tx, context map[string]any) error {
 		if err != nil {
 			return err
 		}
-		if app, ok := context["app"].(*wsl.WSL); ok {
+		if app, ok := context["app"].(*wsl.App); ok {
 			db := app.Databases["main"]
 			if params, ok := context["params"].(map[string]any); ok {
 				clientIp := params["__client_ip"]

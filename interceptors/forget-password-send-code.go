@@ -40,7 +40,7 @@ func (this *ForgetPasswordSendCodeInterceptor) AfterEach(tx *sql.Tx, context map
 			email := results[0]["email"]
 			userFlagCode := context["forget_password"]
 			if results[0]["uid"] != "" && email != "" {
-				if wslApp, ok := context["app"].(*wsl.WSL); ok {
+				if wslApp, ok := context["app"].(*wsl.App); ok {
 					err := wslApp.SendMail(email, "Password Reset Verification Code", userFlagCode.(string), email)
 					if err != nil {
 						return err

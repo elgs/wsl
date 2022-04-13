@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
+func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	if this.Config.Web.Cors {
 		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -109,7 +109,7 @@ func (this *WSL) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, jsonString)
 }
 
-func (this *WSL) LoadScripts(scriptName string) error {
+func (this *App) LoadScripts(scriptName string) error {
 	wd, _ := os.Getwd()
 	scriptPath := path.Dir(wd)
 

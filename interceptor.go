@@ -38,7 +38,7 @@ func (this *DefaultInterceptor) OnError(err *error) error {
 	return *err
 }
 
-func (this *WSL) RegisterQueryInterceptors(queryId string, is ...Interceptor) {
+func (this *App) RegisterQueryInterceptors(queryId string, is ...Interceptor) {
 	for _, i := range is {
 		if _, ok := this.queryInterceptors[queryId]; ok {
 			this.queryInterceptors[queryId] = append(this.queryInterceptors[queryId], i)
@@ -48,7 +48,7 @@ func (this *WSL) RegisterQueryInterceptors(queryId string, is ...Interceptor) {
 	}
 }
 
-func (this *WSL) RegisterGlobalInterceptors(is ...Interceptor) {
+func (this *App) RegisterGlobalInterceptors(is ...Interceptor) {
 	for _, i := range is {
 		this.globalInterceptors = append(this.globalInterceptors, i)
 	}

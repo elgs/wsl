@@ -2,7 +2,7 @@ package scripts
 
 import "github.com/elgs/wsl"
 
-func LoadBuiltInScripts(app *wsl.WSL) {
+func LoadBuiltInScripts(app *wsl.App) {
 	app.Scripts["init"] = Init
 	app.Scripts["signup"] = Signup
 	app.Scripts["login"] = Login

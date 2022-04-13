@@ -3,32 +3,9 @@ package wsl
 import (
 	"errors"
 	"fmt"
-	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 	"unicode"
 )
-
-func Hook() {
-	sigs := make(chan os.Signal, 1)
-	done := make(chan bool, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		for {
-			select {
-			case sig := <-sigs:
-				fmt.Println(sig)
-				// cleanup code here
-				done <- true
-			}
-		}
-	}()
-
-	<-done
-	fmt.Println("Bye!")
-}
 
 func extractParamsFromMap(m map[string]any) []any {
 	if params, ok := m["params"].([]any); ok {

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func (this *WSL) SendMail(from, subject, body string, to ...string) error {
+func (this *App) SendMail(from, subject, body string, to ...string) error {
 	return sendMail(this.Config.Mail.Host, this.Config.Mail.Username, this.Config.Mail.Password,
 		from, subject, body, to...)
 }

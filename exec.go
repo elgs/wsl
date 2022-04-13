@@ -11,7 +11,7 @@ import (
 	"github.com/elgs/gosqljson"
 )
 
-func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]any, context map[string]any) (any, error) {
+func (this *App) exec(qID string, db *sql.DB, scripts string, params map[string]any, context map[string]any) (any, error) {
 
 	sqlParams := extractParamsFromMap(params)
 
@@ -195,7 +195,7 @@ func (this *WSL) exec(qID string, db *sql.DB, scripts string, params map[string]
 	return ret, nil
 }
 
-func (this *WSL) interceptError(qID string, err *error) error {
+func (this *App) interceptError(qID string, err *error) error {
 	for _, li := range this.queryInterceptors[qID] {
 		err := li.OnError(err)
 		if err != nil {

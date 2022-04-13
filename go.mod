@@ -10,4 +10,4 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 )
 
-require github.com/stretchr/testify v1.7.0 // indirect
+require github.com/stretchr/testify v1.7.1 // indirect

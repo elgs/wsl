@@ -1,9 +1,6 @@
 package wsl
 
-import (
-	"encoding/json"
-	"io/ioutil"
-)
+import "encoding/json"
 
 type Config struct {
 	Web       *Web                `json:"web"`
@@ -31,11 +28,8 @@ type Mail struct {
 	From     string `json:"from"`
 }
 
-func NewConfig(configFilePath string) (*Config, error) {
-	appFileBytes, err := ioutil.ReadFile(configFilePath)
+func NewConfig(confBytes []byte) (*Config, error) {
 	var config Config
-	err = json.Unmarshal(appFileBytes, &config)
+	err := json.Unmarshal(confBytes, &config)
 	return &config, err
 }
-
-// 			this.Web.KeyFile = path.Join(path.Dir(this.ConfFile), "key.pem")

@@ -2,17 +2,18 @@ package wsl
 
 import (
 	"database/sql"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"path"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/robfig/cron/v3"
 )
 
-type WSL struct {
+type App struct {
 	Config    *Config
 	Databases map[string]*sql.DB
 
@@ -33,20 +34,8 @@ type WSL struct {
 	Scripts map[string]string
 }
 
-func NewWithConfigPath(confPath string) (*WSL, error) {
-	confFile := flag.String("c", confPath, "configration file path")
-	flag.Parse()
-	path.Dir(*confFile)
-
-	return New(*confFile, "")
-}
-
-func New(confFile string, basePath string) (*WSL, error) {
-	config, err := NewConfig(confFile)
-	if err != nil {
-		return nil, err
-	}
-	wsl := &WSL{
+func New(config *Config) *App {
+	wsl := &App{
 		Config:            config,
 		Scripts:           map[string]string{},
 		Databases:         map[string]*sql.DB{},
@@ -54,10 +43,10 @@ func New(confFile string, basePath string) (*WSL, error) {
 		Jobs:              map[string]*Job{},
 		Cron:              cron.New(),
 	}
-	return wsl, err
+	return wsl
 }
 
-func (this *WSL) connectToDb(dbName string) error {
+func (this *App) connectToDb(dbName string) error {
 	if this.Databases[dbName] == nil {
 		dbData := this.Config.Databases[dbName]
 		db, err := sql.Open(dbData.Type, dbData.Url)
@@ -69,7 +58,7 @@ func (this *WSL) connectToDb(dbName string) error {
 	return nil
 }
 
-func (this *WSL) Start() {
+func (this *App) Start() {
 	for dbName := range this.Config.Databases {
 		if err := this.connectToDb(dbName); err != nil {
 			log.Println(err)
@@ -114,4 +103,26 @@ func (this *WSL) Start() {
 			log.Fatal(srvs.ListenAndServeTLS(this.Config.Web.CertFile, this.Config.Web.KeyFile))
 		}()
 	}
+
+	Hook()
+}
+
+func Hook() {
+	sigs := make(chan os.Signal, 1)
+	done := make(chan bool, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		for {
+			select {
+			case sig := <-sigs:
+				fmt.Println(sig)
+				// cleanup code here
+				done <- true
+			}
+		}
+	}()
+
+	<-done
+	fmt.Println("Bye!")
 }
