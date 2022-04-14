@@ -32,7 +32,7 @@ type Mail struct {
 	From     string `json:"from"`
 }
 
-func NewConfig(confBytes []byte) *optional.Optional[Config] {
+func NewConfig(confBytes []byte) *optional.Optional[*Config] {
 	var config Config
 	err := json.Unmarshal(confBytes, &config)
 	return optional.New(&config, err)

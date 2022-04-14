@@ -112,7 +112,7 @@ func ConvertArray[T any, U any](arrayOfInterfaces []T) *optional.Optional[[]U] {
 			return optional.New[[]U](nil, errors.New("Failed to convert."))
 		}
 	}
-	return optional.New(&ret, nil)
+	return optional.New(ret, nil)
 }
 
 func ConvertMap[T any, U any](data map[string]T) *optional.Optional[map[string]U] {
@@ -127,5 +127,5 @@ func ConvertMap[T any, U any](data map[string]T) *optional.Optional[map[string]U
 			return optional.New[map[string]U](nil, errors.New("Failed to convert."))
 		}
 	}
-	return optional.New(&ret, nil)
+	return optional.New(ret, nil)
 }
