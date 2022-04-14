@@ -3,13 +3,16 @@ package wsl
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"path"
 	"syscall"
 	"time"
 
+	"github.com/elgs/optional"
 	"github.com/robfig/cron/v3"
 )
 
@@ -58,6 +61,16 @@ func (this *App) GetDB(dbName string) *sql.DB {
 		this.Databases[dbName] = db
 	}
 	return db
+}
+
+func (this *App) GetScript(scriptName string, forceReload bool) *optional.Optional[string] {
+	data, err := ioutil.ReadFile(path.Join("scripts", scriptName, ".sql"))
+	if err != nil {
+		return optional.New[string]("", err)
+	}
+	sqlString := string(data)
+	this.Scripts[scriptName] = sqlString
+	return optional.New(sqlString, nil)
 }
 
 func (this *App) Start() {

@@ -10,6 +10,7 @@ type Config struct {
 	Web       *Web                `json:"web"`
 	Databases map[string]Database `json:"databases"`
 	Mail      *Mail               `json:"mail"`
+	Opt       map[string]any      `json:opt`
 }
 
 type Web struct {

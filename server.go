@@ -3,14 +3,11 @@ package wsl
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
-	"path"
-	"path/filepath"
 	"strings"
 )
 
@@ -34,12 +31,16 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, fmt.Sprint(`{"err":"invalid_url"}`))
 		return
 	}
-	qID := urlPath[1]
 
-	if os.Getenv("env") == "dev" {
-		this.LoadScripts(qID)
+	queryId := urlPath[1]
+	scriptOpt := this.GetScript(queryId, os.Getenv("env") == "dev")
+	if scriptOpt.Error != nil {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, fmt.Sprint(`{"err":"`, scriptOpt.Error, `"}`))
+		scriptOpt.PrintIfError()
+		return
 	}
-	script := this.Scripts[qID]
 
 	sepIndex := strings.LastIndex(r.RemoteAddr, ":")
 	clientIP := r.RemoteAddr[0:sepIndex]
@@ -89,7 +90,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	if authHeader != nil && authHeader != "" {
 		context["access_token"] = authHeader
 	}
-	result, err := this.exec(qID, this.GetDB("main"), script, params, context)
+	result, err := this.exec(queryId, this.GetDB("main"), scriptOpt.Data, params, context)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
@@ -108,175 +109,3 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	fmt.Fprint(w, jsonString)
 }
-
-func (this *App) LoadScripts(scriptName string) error {
-	wd, _ := os.Getwd()
-	scriptPath := path.Dir(wd)
-
-	return filepath.Walk(scriptPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			log.Println(err)
-		}
-		if !info.IsDir() && strings.HasSuffix(info.Name(), ".sql") {
-			data, err := ioutil.ReadFile(path)
-			if err != nil {
-				log.Println(err)
-			}
-			scriptName := strings.TrimSuffix(info.Name(), ".sql")
-			this.Scripts[scriptName] = string(data)
-			if info.Name() == scriptName {
-				return io.EOF
-			}
-		}
-		return nil
-	})
-}
-
-// const (
-// 	// Time allowed to write a message to the peer.
-// 	writeWait = 10 * time.Second
-
-// 	// Time allowed to read the next pong message from the peer.
-// 	pongWait = 60 * time.Second
-
-// 	// Send pings to peer with this period. Must be less than pongWait.
-// 	pingPeriod = (pongWait * 9) / 10
-
-// 	// Maximum message size allowed from peer.
-// 	// maxMessageSize = 512
-// )
-
-// var upgrader = websocket.Upgrader{
-// 	ReadBufferSize:  1024,
-// 	WriteBufferSize: 1024,
-// 	CheckOrigin:     func(r *http.Request) bool { return true },
-// }
-
-// func (this *WSL) readWs(conn *websocket.Conn, m chan []byte, clientIp string, ins *WSL) {
-// 	defer func() {
-// 		log.Println("read connection closed.")
-// 		conn.Close()
-// 	}()
-// 	// conn.SetReadLimit(maxMessageSize)
-// 	conn.SetReadDeadline(time.Now().Add(pongWait))
-// 	conn.SetPongHandler(func(string) error {
-// 		conn.SetReadDeadline(time.Now().Add(pongWait))
-// 		// log.Println("pong received.")
-// 		return nil
-// 	})
-// 	for {
-// 		_, message, err := conn.ReadMessage()
-// 		conn.SetReadDeadline(time.Now().Add(pongWait))
-// 		if err != nil {
-// 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-// 				log.Println(err)
-// 			}
-// 			break
-// 		}
-
-// 		var input map[string]any
-
-// 		err = json.Unmarshal(message, &input)
-// 		if err != nil {
-// 			log.Println(err)
-// 			return
-// 		}
-
-// 		query := input["query"]
-// 		if query == nil {
-// 			log.Println("Invalid query.")
-// 			return
-// 		}
-// 		qID := query.(string)
-// 		script := this.Config.Db.Scripts[qID]
-
-// 		params, err := ConvertMapOfInterfacesToMapOfStrings(input["data"].(map[string]any))
-// 		if err != nil {
-// 			log.Println(err)
-// 			return
-// 		}
-
-// 		params["__client_ip"] = clientIp
-
-// 		context := map[string]any{}
-
-// 		authHeader := input["access_token"]
-// 		if authHeader != nil {
-// 			context["access_token"] = authHeader
-// 		}
-
-// 		result, err := ins.exec(qID, this.db, script, params, context)
-// 		if err != nil {
-// 			log.Println(err)
-// 			return
-// 		}
-
-// 		ret := make(map[string]any)
-// 		ret["data"] = result
-// 		if tokenString, ok := context["token"]; ok {
-// 			ret["token"] = tokenString.(string)
-// 		}
-
-// 		jsonData, err := json.Marshal(ret)
-// 		if err != nil {
-// 			log.Println(err)
-// 			return
-// 		}
-// 		m <- jsonData
-// 	}
-// }
-
-// func (this *WSL) writeWs(conn *websocket.Conn, m chan []byte) {
-// 	defer func() {
-// 		log.Println("write connection closed.")
-// 		conn.Close()
-// 	}()
-// 	for {
-// 		select {
-// 		case message, ok := <-m:
-// 			conn.SetWriteDeadline(time.Now().Add(writeWait))
-// 			if !ok {
-// 				conn.WriteMessage(websocket.CloseMessage, []byte{})
-// 				return
-// 			}
-// 			// log.Println("message received.")
-// 			err := conn.WriteMessage(websocket.TextMessage, message)
-// 			if err != nil {
-// 				log.Println(err)
-// 				break
-// 			}
-// 		case <-time.After(pingPeriod):
-// 			// wait for pingPeriod time of inactivitity, then send a ping, disconnect if pong is not received within writeWait.
-// 			conn.SetWriteDeadline(time.Now().Add(writeWait))
-// 			// log.Println("ping sent.")
-// 			if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-// 				log.Println(err)
-// 				return
-// 			}
-// 		}
-// 	}
-// }
-
-// func (this *WSL) wsHandler(w http.ResponseWriter, r *http.Request) {
-// 	if r.Method == "OPTIONS" {
-// 		return
-// 	}
-// 	conn, err := upgrader.Upgrade(w, r, nil)
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		fmt.Fprint(w, err)
-// 		log.Println(err)
-// 		return
-// 	}
-
-// 	sepIndex := strings.LastIndex(r.RemoteAddr, ":")
-// 	clientIp := r.RemoteAddr[0:sepIndex]
-// 	clientIp = strings.Replace(strings.Replace(clientIp, "[", "", -1), "]", "", -1)
-
-// 	// fmt.Println(clientIp)
-// 	// log.Println("Connected")
-
-// 	m := make(chan []byte)
-// 	go this.readWs(conn, m, clientIp, this)
-// 	go this.writeWs(conn, m)
-// }
