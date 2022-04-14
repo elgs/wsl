@@ -1,6 +1,10 @@
 package wsl
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/elgs/optional"
+)
 
 type Config struct {
 	Web       *Web                `json:"web"`
@@ -28,8 +32,8 @@ type Mail struct {
 	From     string `json:"from"`
 }
 
-func NewConfig(confBytes []byte) (*Config, error) {
+func NewConfig(confBytes []byte) *optional.Optional[Config] {
 	var config Config
 	err := json.Unmarshal(confBytes, &config)
-	return &config, err
+	return optional.New(&config, err)
 }

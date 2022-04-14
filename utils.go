@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"unicode"
+
+	"github.com/elgs/optional"
 )
 
 func extractParamsFromMap(m map[string]any) []any {
@@ -101,59 +103,29 @@ func IsQuery(sql string) bool {
 	return false
 }
 
-var ConvertStringArrayToInterfaceArray = func(arrayOfStrings []string) []any {
-	ret := []any{}
-	for _, v := range arrayOfStrings {
-		ret = append(ret, v)
-	}
-	return ret
-}
-
-var ConvertInterfaceArrayToStringArray = func(arrayOfInterfaces []any) ([]string, error) {
-	ret := []string{}
+func ConvertArray[T any, U any](arrayOfInterfaces []T) *optional.Optional[[]U] {
+	ret := []U{}
 	for _, v := range arrayOfInterfaces {
-		if s, ok := v.(string); ok {
+		if s, ok := any(v).(U); ok {
 			ret = append(ret, s)
 		} else {
-			return nil, errors.New("Failed to convert.")
+			return optional.New[[]U](nil, errors.New("Failed to convert."))
 		}
 	}
-	return ret, nil
+	return optional.New(&ret, nil)
 }
 
-var ConvertMapOfInterfacesToMapOfStrings = func(data map[string]any) (map[string]string, error) {
+func ConvertMap[T any, U any](data map[string]T) *optional.Optional[map[string]U] {
 	if data == nil {
-		return nil, errors.New("Cannot convert nil.")
+		return optional.New[map[string]U](nil, errors.New("Cannot convert nil."))
 	}
-	ret := map[string]string{}
+	ret := map[string]U{}
 	for k, v := range data {
-		if v == nil {
-			return nil, errors.New("Data contains nil.")
+		if s, ok := any(v).(U); ok {
+			ret[k] = s
+		} else {
+			return optional.New[map[string]U](nil, errors.New("Failed to convert."))
 		}
-		ret[k] = v.(string)
 	}
-	return ret, nil
-}
-
-var ConvertMapOfStringsToMapOfInterfaces = func(data map[string]string) (map[string]any, error) {
-	if data == nil {
-		return nil, errors.New("Cannot convert nil.")
-	}
-	ret := map[string]any{}
-	for k, v := range data {
-		ret[k] = v
-	}
-	return ret, nil
-}
-
-func HandleError(err error) {
-	if err != nil {
-		panic((err))
-	}
-}
-
-func PrintError() {
-	if err := recover(); err != nil {
-		fmt.Println(err)
-	}
+	return optional.New(&ret, nil)
 }

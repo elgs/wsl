@@ -34,7 +34,7 @@ type App struct {
 	Scripts map[string]string
 }
 
-func New(config *Config) *App {
+func NewApp(config *Config) *App {
 	wsl := &App{
 		Config:            config,
 		Scripts:           map[string]string{},
@@ -46,26 +46,21 @@ func New(config *Config) *App {
 	return wsl
 }
 
-func (this *App) connectToDb(dbName string) error {
-	if this.Databases[dbName] == nil {
+func (this *App) GetDB(dbName string) *sql.DB {
+	db := this.Databases[dbName]
+	if db == nil {
 		dbData := this.Config.Databases[dbName]
 		db, err := sql.Open(dbData.Type, dbData.Url)
 		if err != nil {
-			return err
+			log.Println(err)
+			return nil
 		}
 		this.Databases[dbName] = db
 	}
-	return nil
+	return db
 }
 
 func (this *App) Start() {
-	for dbName := range this.Config.Databases {
-		if err := this.connectToDb(dbName); err != nil {
-			log.Println(err)
-			return
-		}
-	}
-
 	for _, b := range this.Jobs {
 		entryId, err := this.Cron.AddFunc(b.Cron, b.MakeFunc(this))
 		if err != nil {

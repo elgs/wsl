@@ -48,7 +48,7 @@ func (this *AuthInterceptor) getSession(tx *sql.Tx, sessionId string) (map[strin
 	if len(dbResult) != 1 {
 		return nil, errors.New("session_not_found")
 	}
-	Sessions[sessionId], err = wsl.ConvertMapOfStringsToMapOfInterfaces(dbResult[0])
+	Sessions[sessionId] = *wsl.ConvertMap[string, any](dbResult[0]).Data
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (this *AuthInterceptor) Before(tx *sql.Tx, context map[string]any) error {
 			return err
 		}
 		if app, ok := context["app"].(*wsl.App); ok {
-			db := app.Databases["main"]
+			db := app.GetDB("main")
 			if params, ok := context["params"].(map[string]any); ok {
 				clientIp := params["__client_ip"]
 				go this.updateLastSeen(db, tokenString, clientIp.(string))

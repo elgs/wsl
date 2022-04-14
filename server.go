@@ -68,7 +68,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	params := valuesToMap(false, paramValues)
 	if queryParams, ok := params["params"]; ok {
 		if ps, ok := queryParams.(string); ok {
-			params["params"] = ConvertStringArrayToInterfaceArray(strings.Split(ps, ","))
+			params["params"] = ConvertArray[string, any](strings.Split(ps, ","))
 		}
 	}
 	for k, v := range bodyData {
@@ -89,7 +89,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	if authHeader != nil && authHeader != "" {
 		context["access_token"] = authHeader
 	}
-	result, err := this.exec(qID, this.Databases["main"], script, params, context)
+	result, err := this.exec(qID, this.GetDB("main"), script, params, context)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))

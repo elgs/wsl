@@ -36,6 +36,6 @@ var cleanup = &wsl.Job{
 			}
 		}
 
-		return executeSQL(app.Databases["main"], app.Scripts["cleanup"], nil, nil, after)
+		return executeSQL(app.GetDB("main"), app.Scripts["cleanup"], nil, nil, after)
 	},
 }
