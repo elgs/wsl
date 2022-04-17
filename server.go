@@ -34,7 +34,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 	queryId := urlPath[1]
 	script := this.GetScript(queryId, os.Getenv("env") == "dev")
-	if len(script) > 0 {
+	if len(script) == 0 {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, fmt.Sprint(`{"err": "invalid_script"}`))
