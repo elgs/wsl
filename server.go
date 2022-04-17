@@ -33,12 +33,11 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	queryId := urlPath[1]
-	scriptOpt := this.GetScript(queryId, os.Getenv("env") == "dev")
-	if scriptOpt.Error != nil {
+	script := this.GetScript(queryId, os.Getenv("env") == "dev")
+	if len(script) > 0 {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, fmt.Sprint(`{"err":"`, scriptOpt.Error, `"}`))
-		scriptOpt.PrintIfError()
+		fmt.Fprint(w, fmt.Sprint(`{"err": "invalid_script"}`))
 		return
 	}
 
@@ -66,6 +65,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
+
 	params := valuesToMap(false, paramValues)
 	if queryParams, ok := params["params"]; ok {
 		if ps, ok := queryParams.(string); ok {
@@ -90,7 +90,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	if authHeader != nil && authHeader != "" {
 		context["access_token"] = authHeader
 	}
-	result, err := this.exec(queryId, this.GetDB("main"), scriptOpt.Data, params, context)
+	result, err := this.exec(queryId, this.GetDB("main"), script, params, context)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))

@@ -12,7 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/elgs/optional"
 	"github.com/robfig/cron/v3"
 )
 
@@ -24,7 +23,7 @@ type App struct {
 	// guaranteed to be executed in its list order on each query.
 	globalInterceptors []Interceptor
 
-	// queryInterceptors is the registry for each named query (qID) of a list of
+	// queryInterceptors is the registry for each named query (queryID) of a list of
 	// Interceptors that is guaranteed to be executed in its list order on each
 	// query.
 	queryInterceptors map[string][]Interceptor
@@ -50,27 +49,29 @@ func NewApp(config *Config) *App {
 }
 
 func (this *App) GetDB(dbName string) *sql.DB {
-	db := this.Databases[dbName]
-	if db == nil {
-		dbData := this.Config.Databases[dbName]
-		db, err := sql.Open(dbData.Type, dbData.Url)
-		if err != nil {
-			log.Println(err)
-			return nil
-		}
-		this.Databases[dbName] = db
+	if db, ok := this.Databases[dbName]; ok {
+		return db
 	}
+	dbData := this.Config.Databases[dbName]
+	db, err := sql.Open(dbData.Type, dbData.Url)
+	if err != nil {
+		return nil
+	}
+	this.Databases[dbName] = db
 	return db
 }
 
-func (this *App) GetScript(scriptName string, forceReload bool) *optional.Optional[string] {
+func (this *App) GetScript(scriptName string, forceReload bool) string {
+	if sqlString, ok := this.Scripts[scriptName]; ok {
+		return sqlString
+	}
 	data, err := ioutil.ReadFile(path.Join("scripts", scriptName, ".sql"))
 	if err != nil {
-		return optional.New[string]("", err)
+		return ""
 	}
 	sqlString := string(data)
 	this.Scripts[scriptName] = sqlString
-	return optional.New(sqlString, nil)
+	return sqlString
 }
 
 func (this *App) Start() {

@@ -11,7 +11,7 @@ import (
 	"github.com/elgs/gosqljson"
 )
 
-func (this *App) exec(qID string, db *sql.DB, scripts string, params map[string]any, context map[string]any) (any, error) {
+func (this *App) exec(queryID string, db *sql.DB, scripts string, params map[string]any, context map[string]any) (any, error) {
 
 	sqlParams := extractParamsFromMap(params)
 
@@ -39,7 +39,7 @@ func (this *App) exec(qID string, db *sql.DB, scripts string, params map[string]
 		}
 	}
 
-	for _, li := range this.queryInterceptors[qID] {
+	for _, li := range this.queryInterceptors[queryID] {
 		err := li.Before(tx, context)
 		if err != nil {
 			tx.Rollback()
@@ -91,7 +91,7 @@ func (this *App) exec(qID string, db *sql.DB, scripts string, params map[string]
 
 			skipSql := false
 			localSqlParams := sqlParams[totalCount-count : totalCount]
-			for _, li := range this.queryInterceptors[qID] {
+			for _, li := range this.queryInterceptors[queryID] {
 				skip, err := li.BeforeEach(tx, context, &s, &localSqlParams, index, label, cumulativeResults)
 				if err != nil {
 					tx.Rollback()
@@ -118,7 +118,7 @@ func (this *App) exec(qID string, db *sql.DB, scripts string, params map[string]
 					data = append([][]string{header}, data...)
 					if err != nil {
 						tx.Rollback()
-						ierr := this.interceptError(qID, &err)
+						ierr := this.interceptError(queryID, &err)
 						if ierr != nil {
 							log.Println(ierr)
 						}
@@ -133,7 +133,7 @@ func (this *App) exec(qID string, db *sql.DB, scripts string, params map[string]
 					result, err = gosqljson.QueryTxToMap(tx, theCase, s, localSqlParams...)
 					if err != nil {
 						tx.Rollback()
-						ierr := this.interceptError(qID, &err)
+						ierr := this.interceptError(queryID, &err)
 						if ierr != nil {
 							log.Println(ierr)
 						}
@@ -148,7 +148,7 @@ func (this *App) exec(qID string, db *sql.DB, scripts string, params map[string]
 				result, err = gosqljson.ExecTx(tx, s, localSqlParams...)
 				if err != nil {
 					tx.Rollback()
-					ierr := this.interceptError(qID, &err)
+					ierr := this.interceptError(queryID, &err)
 					if ierr != nil {
 						log.Println(ierr)
 					}
@@ -160,7 +160,7 @@ func (this *App) exec(qID string, db *sql.DB, scripts string, params map[string]
 				}
 			}
 
-			for _, li := range this.queryInterceptors[qID] {
+			for _, li := range this.queryInterceptors[queryID] {
 				err := li.AfterEach(tx, context, index, label, result, cumulativeResults)
 				if err != nil {
 					tx.Rollback()
@@ -175,7 +175,7 @@ func (this *App) exec(qID string, db *sql.DB, scripts string, params map[string]
 	// 	ret = exportedResults[0]
 	// }
 
-	for _, li := range this.queryInterceptors[qID] {
+	for _, li := range this.queryInterceptors[queryID] {
 		err := li.After(tx, context, &ret, cumulativeResults)
 		if err != nil {
 			tx.Rollback()
@@ -195,8 +195,8 @@ func (this *App) exec(qID string, db *sql.DB, scripts string, params map[string]
 	return ret, nil
 }
 
-func (this *App) interceptError(qID string, err *error) error {
-	for _, li := range this.queryInterceptors[qID] {
+func (this *App) interceptError(queryID string, err *error) error {
+	for _, li := range this.queryInterceptors[queryID] {
 		err := li.OnError(err)
 		if err != nil {
 			return err
