@@ -37,7 +37,7 @@ type App struct {
 }
 
 func NewApp(config *Config) *App {
-	wsl := &App{
+	return &App{
 		Config:            config,
 		Scripts:           map[string]string{},
 		Databases:         map[string]*sql.DB{},
@@ -45,7 +45,6 @@ func NewApp(config *Config) *App {
 		Jobs:              map[string]*Job{},
 		Cron:              cron.New(),
 	}
-	return wsl
 }
 
 func (this *App) GetDB(dbName string) *sql.DB {
@@ -87,7 +86,6 @@ func (this *App) Start() {
 	this.Cron.Start()
 
 	http.HandleFunc("/", this.defaultHandler)
-	// http.HandleFunc("/ws", this.wsHandler)
 
 	if this.Config.Web.HttpAddr != "" {
 		srv := &http.Server{
