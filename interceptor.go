@@ -10,8 +10,8 @@ import (
 // the query, or convert the result to other formats.
 type Interceptor interface {
 	Before(tx *sql.Tx, context map[string]any) error
-	BeforeEach(tx *sql.Tx, context map[string]any, script *string, sqlParams *[]any, scriptIndex int, scriptLabel string, cumulativeResults map[string]any) (bool, error)
-	AfterEach(tx *sql.Tx, context map[string]any, scriptIndex int, scriptLabel string, result any, cumulativeResults map[string]any) error
+	BeforeEach(tx *sql.Tx, context map[string]any, statement *Statement, cumulativeResults map[string]any) (bool, error)
+	AfterEach(tx *sql.Tx, context map[string]any, statement *Statement, result any, cumulativeResults map[string]any) error
 	After(tx *sql.Tx, context map[string]any, results *any, allResults any) error
 	OnError(err *error) error
 }
@@ -26,26 +26,16 @@ func (this *DefaultInterceptor) After(tx *sql.Tx, context map[string]any, result
 	return nil
 }
 
-func (this *DefaultInterceptor) BeforeEach(tx *sql.Tx, context map[string]any, script *string, sqlParams *[]any, scriptIndex int, scriptLabel string, cumulativeResults map[string]any) (bool, error) {
+func (this *DefaultInterceptor) BeforeEach(tx *sql.Tx, context map[string]any, statement *Statement, cumulativeResults map[string]any) (bool, error) {
 	return false, nil
 }
 
-func (this *DefaultInterceptor) AfterEach(tx *sql.Tx, context map[string]any, scriptIndex int, scriptLabel string, result any, cumulativeResults map[string]any) error {
+func (this *DefaultInterceptor) AfterEach(tx *sql.Tx, context map[string]any, statement *Statement, result any, cumulativeResults map[string]any) error {
 	return nil
 }
 
 func (this *DefaultInterceptor) OnError(err *error) error {
 	return *err
-}
-
-func (this *App) RegisterQueryInterceptors(queryId string, is ...Interceptor) {
-	for _, i := range is {
-		if _, ok := this.queryInterceptors[queryId]; ok {
-			this.queryInterceptors[queryId] = append(this.queryInterceptors[queryId], i)
-		} else {
-			this.queryInterceptors[queryId] = []Interceptor{i}
-		}
-	}
 }
 
 func (this *App) RegisterGlobalInterceptors(is ...Interceptor) {
