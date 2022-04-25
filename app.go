@@ -12,8 +12,25 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/elgs/gosplitargs"
+	"github.com/elgs/optional"
 	"github.com/robfig/cron/v3"
 )
+
+type Statement struct {
+	ID        string
+	Index     int
+	Label     string
+	Text      string
+	ParamKeys *[]string
+	Script    *Script
+}
+
+type Script struct {
+	Text         string
+	Statements   *[]Statement
+	Interceptors *[]Interceptor
+}
 
 type App struct {
 	Config    *Config
@@ -23,27 +40,21 @@ type App struct {
 	// guaranteed to be executed in its list order on each query.
 	globalInterceptors []Interceptor
 
-	// queryInterceptors is the registry for each named query (queryID) of a list of
-	// Interceptors that is guaranteed to be executed in its list order on each
-	// query.
-	queryInterceptors map[string][]Interceptor
-
 	// jobs is the registry for cron jobs
 	Jobs map[string]*Job
 
 	Cron *cron.Cron
 
-	Scripts map[string]string
+	Scripts map[string]*Script
 }
 
 func NewApp(config *Config) *App {
 	return &App{
-		Config:            config,
-		Scripts:           map[string]string{},
-		Databases:         map[string]*sql.DB{},
-		queryInterceptors: map[string][]Interceptor{},
-		Jobs:              map[string]*Job{},
-		Cron:              cron.New(),
+		Config:    config,
+		Scripts:   map[string]*Script{},
+		Databases: map[string]*sql.DB{},
+		Jobs:      map[string]*Job{},
+		Cron:      cron.New(),
 	}
 }
 
@@ -60,17 +71,38 @@ func (this *App) GetDB(dbName string) *sql.DB {
 	return db
 }
 
-func (this *App) GetScript(scriptName string, forceReload bool) string {
-	if sqlString, ok := this.Scripts[scriptName]; ok {
-		return sqlString
+func (this *App) GetScript(scriptName string, forceReload bool) *optional.Optional[*Script] {
+	if script, ok := this.Scripts[scriptName]; ok {
+		return optional.New(script, nil)
 	}
+
 	data, err := ioutil.ReadFile(path.Join("scripts", scriptName, ".sql"))
 	if err != nil {
-		return ""
+		return optional.New[*Script](nil, err)
 	}
 	sqlString := string(data)
-	this.Scripts[scriptName] = sqlString
-	return sqlString
+	scriptArray, err := gosplitargs.SplitArgs(sqlString, ";", true)
+	if err != nil {
+		return optional.New[*Script](nil, err)
+	}
+
+	script := &Script{
+		Text:         sqlString,
+		Statements:   &[]Statement{},
+		Interceptors: &[]Interceptor{},
+	}
+	for index, scriptString := range scriptArray {
+		statement := &Statement{
+			ID:     scriptName,
+			Index:  index,
+			Text:   scriptString,
+			Script: script,
+		}
+		*script.Statements = append(*script.Statements, *statement)
+	}
+
+	this.Scripts[scriptName] = script
+	return optional.New(script, nil)
 }
 
 func (this *App) Start() {
