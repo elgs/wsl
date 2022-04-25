@@ -2,26 +2,23 @@ package wsl
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"unicode"
 
 	"github.com/elgs/optional"
 )
 
-func extractParamsFromMap(m map[string]any) []any {
-	if params, ok := m["params"].([]any); ok {
-		return params
-	}
-	ret := []any{}
-	for i := 0; ; i++ {
-		if val, ok := m[fmt.Sprint("_", i)]; ok {
-			ret = append(ret, val)
-		} else {
-			break
+func extractScriptParams(scriptArray *[]string) *optional.Optional[*[]string] {
+	ret := []string{}
+	for _, script := range *scriptArray {
+		_ = script
+		// if script matches `set @variable := ?`
+		if true {
+			key := ""
+			ret = append(ret, key)
 		}
 	}
-	return ret
+	return optional.New(&ret, nil)
 }
 
 func ExtractScriptParamsFromMap(m map[string]any) map[string]any {
@@ -40,10 +37,18 @@ func valuesToMap(keyLowerCase bool, values ...map[string][]string) map[string]an
 	ret := map[string]any{}
 	for _, vs := range values {
 		for k, v := range vs {
-			if keyLowerCase {
-				ret[strings.ToLower(k)] = v[0]
+			var value any
+			if len(v) == 0 {
+				value = nil
+			} else if len(v) == 1 {
+				value = v[0]
 			} else {
-				ret[k] = v[0]
+				value = v
+			}
+			if keyLowerCase {
+				ret[strings.ToLower(k)] = value
+			} else {
+				ret[k] = value
 			}
 		}
 	}
@@ -103,16 +108,16 @@ func IsQuery(sql string) bool {
 	return false
 }
 
-func ConvertArray[T any, U any](arrayOfInterfaces []T) *optional.Optional[[]U] {
+func ConvertArray[T any, U any](arrayOfInterfaces []T) *optional.Optional[*[]U] {
 	ret := []U{}
 	for _, v := range arrayOfInterfaces {
 		if s, ok := any(v).(U); ok {
 			ret = append(ret, s)
 		} else {
-			return optional.New[[]U](nil, errors.New("Failed to convert."))
+			return optional.New[*[]U](nil, errors.New("Failed to convert."))
 		}
 	}
-	return optional.New(ret, nil)
+	return optional.New(&ret, nil)
 }
 
 func ConvertMap[T any, U any](data map[string]T) *optional.Optional[map[string]U] {
