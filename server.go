@@ -24,20 +24,20 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	urlPath := strings.Split(r.URL.Path, "/")
 	if len(urlPath) < 2 {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, fmt.Sprint(`{"err":"invalid_url"}`))
 		return
 	}
 
 	queryId := urlPath[1]
-	script := this.GetScript(queryId, os.Getenv("env") == "dev")
-	if len(script) == 0 {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	scriptOpt := this.GetScript(queryId, os.Getenv("env") == "dev")
+	if scriptOpt.Error != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, fmt.Sprint(`{"err": "invalid_script"}`))
+		fmt.Fprint(w, fmt.Sprint(`{"err":"`, scriptOpt.Error, `"}`))
 		return
 	}
 
@@ -47,19 +47,22 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
 		log.Println(err)
 		return
 	}
 	var bodyData map[string]any
-	//intentionally ignore the errors
-	_ = json.Unmarshal(body, &bodyData)
+	err = json.Unmarshal(body, &bodyData)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
+		log.Println(err)
+		return
+	}
 
 	paramValues, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
 		log.Println(err)
@@ -67,11 +70,6 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := valuesToMap(false, paramValues)
-	if queryParams, ok := params["params"]; ok {
-		if ps, ok := queryParams.(string); ok {
-			params["params"] = ConvertArray[string, any](strings.Split(ps, ","))
-		}
-	}
 	for k, v := range bodyData {
 		params[k] = v
 	}
@@ -80,19 +78,18 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 	context := map[string]any{}
 
-	headers := valuesToMap(true, r.Header)
-	authHeader := headers["access_token"]
-
-	if authHeader == nil || authHeader == "" {
-		authHeader = params["access_token"]
+	authHeader := r.Header.Get("access_token")
+	if authHeader == "" && params["access_token"] != nil {
+		if token, ok := params["access_token"].(string); ok {
+			authHeader = token
+		}
 	}
 
-	if authHeader != nil && authHeader != "" {
+	if authHeader != "" {
 		context["access_token"] = authHeader
 	}
-	result, err := this.exec(queryId, this.GetDB("main"), script, params, context)
+	result, err := this.exec(queryId, this.GetDB("main"), scriptOpt.Data, params, context)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
 		log.Println(err)
 		return
@@ -100,12 +97,10 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 	jsonData, err := json.Marshal(result)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
 		log.Println(err)
 		return
 	}
 	jsonString := string(jsonData)
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	fmt.Fprint(w, jsonString)
 }
