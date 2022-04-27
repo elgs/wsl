@@ -18,7 +18,6 @@ import (
 )
 
 type Statement struct {
-	ID     string
 	Index  int
 	Label  string
 	Text   string
@@ -26,6 +25,7 @@ type Statement struct {
 }
 
 type Script struct {
+	ID           string
 	Text         string
 	Params       *[]string
 	Statements   *[]Statement
@@ -71,23 +71,14 @@ func (this *App) GetDB(dbName string) *sql.DB {
 	return db
 }
 
-func (this *App) GetScript(scriptName string, forceReload bool) *optional.Optional[*Script] {
-	if script, ok := this.Scripts[scriptName]; ok {
-		return optional.New(script, nil)
-	}
-
-	data, err := ioutil.ReadFile(path.Join("scripts", scriptName, ".sql"))
-	if err != nil {
-		return optional.New[*Script](nil, err)
-	}
-	sqlString := string(data)
-	statements, err := gosplitargs.SplitArgs(sqlString, ";", true)
+func BuildScript(scriptString string) *optional.Optional[*Script] {
+	statements, err := gosplitargs.SplitArgs(scriptString, ";", true)
 	if err != nil {
 		return optional.New[*Script](nil, err)
 	}
 
 	script := &Script{
-		Text:         sqlString,
+		Text:         scriptString,
 		Params:       &[]string{},
 		Statements:   &[]Statement{},
 		Interceptors: &[]Interceptor{},
@@ -99,7 +90,6 @@ func (this *App) GetScript(scriptName string, forceReload bool) *optional.Option
 			*script.Params = append(*script.Params, param)
 		}
 		statement := &Statement{
-			ID:     scriptName,
 			Index:  index,
 			Label:  label,
 			Text:   statementString,
@@ -107,9 +97,27 @@ func (this *App) GetScript(scriptName string, forceReload bool) *optional.Option
 		}
 		*script.Statements = append(*script.Statements, *statement)
 	}
-
-	this.Scripts[scriptName] = script
 	return optional.New(script, nil)
+}
+
+func (this *App) GetScript(scriptName string, forceReload bool) *optional.Optional[*Script] {
+	if script, ok := this.Scripts[scriptName]; ok {
+		return optional.New(script, nil)
+	}
+
+	data, err := ioutil.ReadFile(path.Join("scripts", scriptName, ".sql"))
+	if err != nil {
+		return optional.New[*Script](nil, err)
+	}
+	scriptString := string(data)
+	scriptOpt := BuildScript(scriptString)
+	if scriptOpt.Error != nil {
+		return scriptOpt
+	}
+
+	scriptOpt.Data.ID = scriptName
+	this.Scripts[scriptName] = scriptOpt.Data
+	return scriptOpt
 }
 
 func (this *App) Start() {
