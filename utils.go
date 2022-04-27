@@ -2,6 +2,7 @@ package wsl
 
 import (
 	"errors"
+	"regexp"
 	"strings"
 	"unicode"
 
@@ -75,6 +76,15 @@ func SqlNormalize(sql *string) {
 		}
 	}
 	*sql = ret
+}
+
+func ExtractSQLParameter(statement string) string {
+	r := regexp.MustCompile(`(?i)\s*set\s+@(.+?)\s*\=\s*\?\s*`)
+	m := r.FindStringSubmatch(statement)
+	if len(m) >= 2 {
+		return m[1]
+	}
+	return ""
 }
 
 func SplitSqlLable(sql string) (label string, s string) {
