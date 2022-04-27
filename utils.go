@@ -79,7 +79,7 @@ func SqlNormalize(sql *string) {
 }
 
 func ExtractSQLParameter(statement string) string {
-	r := regexp.MustCompile(`(?i)\s*set\s+@(.+?)\s*\=\s*\?\s*`)
+	r := regexp.MustCompile(`(?i)\s*set\s+@(.+?)\s*\:\=\s*\?\s*`)
 	m := r.FindStringSubmatch(statement)
 	if len(m) >= 2 {
 		return m[1]
