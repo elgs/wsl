@@ -88,7 +88,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	if authHeader != "" {
 		context["access_token"] = authHeader
 	}
-	result, err := this.exec(queryId, this.GetDB("main"), scriptOpt.Data, params, context)
+	result, err := this.exec(this.GetDB("main"), scriptOpt.Data, params, context)
 	if err != nil {
 		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
 		log.Println(err)

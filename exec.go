@@ -2,24 +2,16 @@ package wsl
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
-	"strings"
 
-	"github.com/elgs/gosplitargs"
 	"github.com/elgs/gosqljson"
 )
 
-func (this *App) exec(queryID string, db *sql.DB, scripts string, params map[string]any, context map[string]any) (any, error) {
+func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context map[string]any) (any, error) {
 
-	sqlParams := extractParamsFromMap(params)
-
-	context["scripts"] = &scripts
+	context["script"] = &script
 	context["params"] = params
-	context["sqlParams"] = &sqlParams
 	context["app"] = this
-
 	params["case"] = "lower"
 
 	exportedResults := map[string]any{}
@@ -39,7 +31,7 @@ func (this *App) exec(queryID string, db *sql.DB, scripts string, params map[str
 		}
 	}
 
-	for _, li := range this.queryInterceptors[queryID] {
+	for _, li := range *script.Interceptors {
 		err := li.Before(tx, context)
 		if err != nil {
 			tx.Rollback()
@@ -48,124 +40,101 @@ func (this *App) exec(queryID string, db *sql.DB, scripts string, params map[str
 	}
 
 	// log.Println(script)
-	if scripts != "" {
-		format := ""
-		theCase := ""
-		if v, ok := params["format"].(string); ok {
-			format = v
-		}
-		if v, ok := params["case"].(string); ok {
-			theCase = v
+	format := ""
+	theCase := ""
+	if v, ok := params["format"].(string); ok {
+		format = v
+	}
+	if v, ok := params["case"].(string); ok {
+		theCase = v
+	}
+
+	// sqlParamsOpt := extractParamsFromMap(&scriptArray, params)
+	// if sqlParamsOpt.Error != nil {
+	// 	return nil, sqlParamsOpt.Error
+	// }
+	// sqlParams := &sqlParamsOpt.Data
+	// context["sqlParams"] = sqlParams
+
+	for _, statement := range *script.Statements {
+		// SqlNormalize(&script)
+		if len(statement.Text) == 0 {
+			continue
 		}
 
-		scriptsArray, err := gosplitargs.SplitArgs(scripts, ";", true)
-		if err != nil {
-			tx.Rollback()
-			return nil, err
-		}
+		// double underscore
+		// scriptParams := ExtractScriptParamsFromMap(params)
+		// for k, v := range scriptParams {
+		// 	script = strings.Replace(script, k, v.(string), -1)
+		// }
 
-		totalCount := 0
-		for index, s := range scriptsArray {
-			label, s := SplitSqlLable(s)
-			SqlNormalize(&s)
-			if len(s) == 0 {
-				continue
+		sqlParams := []any{}
+		if statement.Param != "" {
+			if val, ok := params[statement.Param]; ok {
+				sqlParams = append(sqlParams, val)
+			} else {
+				tx.Rollback()
+				return nil, fmt.Errorf("Parameter %v not provided.", statement.Param)
 			}
+		}
 
-			// double underscore
-			scriptParams := ExtractScriptParamsFromMap(params)
-			for k, v := range scriptParams {
-				s = strings.Replace(s, k, v.(string), -1)
-			}
-
-			count, err := gosplitargs.CountSeparators(s, "\\?")
-			totalCount += count
+		skipSql := false
+		for _, li := range *script.Interceptors {
+			skip, err := li.BeforeEach(tx, context, &statement, cumulativeResults)
 			if err != nil {
 				tx.Rollback()
 				return nil, err
 			}
-			if len(sqlParams) < totalCount {
-				tx.Rollback()
-				return nil, errors.New(fmt.Sprint(s, "Incorrect param count. Expected: ", totalCount, " actual: ", len(sqlParams)))
+			if skip {
+				skipSql = true
 			}
+		}
 
-			skipSql := false
-			localSqlParams := sqlParams[totalCount-count : totalCount]
-			for _, li := range this.queryInterceptors[queryID] {
-				skip, err := li.BeforeEach(tx, context, &s, &localSqlParams, index, label, cumulativeResults)
+		if skipSql {
+			continue
+		}
+
+		if statement.IsQuery {
+			if format == "array" {
+				header, data, err := gosqljson.QueryTxToArray(tx, theCase, statement.Text, sqlParams...)
+				data = append([][]string{header}, data...)
 				if err != nil {
 					tx.Rollback()
 					return nil, err
 				}
-				if skip {
-					skipSql = true
+				cumulativeResults[statement.Label] = data
+				if statement.ShouldExport {
+					exportedResults[statement.Label] = data
 				}
-			}
-
-			if skipSql {
-				continue
-			}
-
-			resultKey := label
-			if resultKey == "" {
-				resultKey = fmt.Sprint(index)
-			}
-
-			export := ShouldExport(s)
-			if IsQuery(s) {
-				if format == "array" {
-					header, data, err := gosqljson.QueryTxToArray(tx, theCase, s, localSqlParams...)
-					data = append([][]string{header}, data...)
-					if err != nil {
-						tx.Rollback()
-						ierr := this.interceptError(queryID, &err)
-						if ierr != nil {
-							log.Println(ierr)
-						}
-						return nil, err
-					}
-					cumulativeResults[resultKey] = data
-					if export {
-						exportedResults[resultKey] = data
-					}
-					result = data
-				} else {
-					result, err = gosqljson.QueryTxToMap(tx, theCase, s, localSqlParams...)
-					if err != nil {
-						tx.Rollback()
-						ierr := this.interceptError(queryID, &err)
-						if ierr != nil {
-							log.Println(ierr)
-						}
-						return nil, err
-					}
-					cumulativeResults[resultKey] = result
-					if export {
-						exportedResults[resultKey] = result
-					}
-				}
+				result = data
 			} else {
-				result, err = gosqljson.ExecTx(tx, s, localSqlParams...)
+				result, err = gosqljson.QueryTxToMap(tx, theCase, statement.Text, sqlParams...)
 				if err != nil {
 					tx.Rollback()
-					ierr := this.interceptError(queryID, &err)
-					if ierr != nil {
-						log.Println(ierr)
-					}
 					return nil, err
 				}
-				cumulativeResults[resultKey] = result
-				if export {
-					exportedResults[resultKey] = result
+				cumulativeResults[statement.Label] = result
+				if statement.ShouldExport {
+					exportedResults[statement.Label] = result
 				}
 			}
+		} else {
+			result, err = gosqljson.ExecTx(tx, statement.Text, sqlParams...)
+			if err != nil {
+				tx.Rollback()
+				return nil, err
+			}
+			cumulativeResults[statement.Label] = result
+			if statement.ShouldExport {
+				exportedResults[statement.Label] = result
+			}
+		}
 
-			for _, li := range this.queryInterceptors[queryID] {
-				err := li.AfterEach(tx, context, index, label, result, cumulativeResults)
-				if err != nil {
-					tx.Rollback()
-					return nil, err
-				}
+		for _, li := range *script.Interceptors {
+			err := li.AfterEach(tx, context, &statement, result, cumulativeResults)
+			if err != nil {
+				tx.Rollback()
+				return nil, err
 			}
 		}
 	}
@@ -175,7 +144,7 @@ func (this *App) exec(queryID string, db *sql.DB, scripts string, params map[str
 	// 	ret = exportedResults[0]
 	// }
 
-	for _, li := range this.queryInterceptors[queryID] {
+	for _, li := range *script.Interceptors {
 		err := li.After(tx, context, &ret, cumulativeResults)
 		if err != nil {
 			tx.Rollback()
@@ -193,21 +162,4 @@ func (this *App) exec(queryID string, db *sql.DB, scripts string, params map[str
 
 	tx.Commit()
 	return ret, nil
-}
-
-func (this *App) interceptError(queryID string, err *error) error {
-	for _, li := range this.queryInterceptors[queryID] {
-		err := li.OnError(err)
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, gi := range this.globalInterceptors {
-		err := gi.OnError(err)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

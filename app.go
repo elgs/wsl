@@ -18,16 +18,18 @@ import (
 )
 
 type Statement struct {
-	Index  int
-	Label  string
-	Text   string
-	Script *Script
+	Index        int
+	Label        string
+	Text         string
+	Param        string
+	IsQuery      bool
+	ShouldExport bool
+	Script       *Script
 }
 
 type Script struct {
 	ID           string
 	Text         string
-	Params       *[]string
 	Statements   *[]Statement
 	Interceptors *[]Interceptor
 }
@@ -79,20 +81,17 @@ func BuildScript(scriptString string) *optional.Optional[*Script] {
 
 	script := &Script{
 		Text:         scriptString,
-		Params:       &[]string{},
 		Statements:   &[]Statement{},
 		Interceptors: &[]Interceptor{},
 	}
 	for index, statementString := range statements {
 		label, statementSQL := SplitSqlLable(statementString)
 		param := ExtractSQLParameter(statementSQL)
-		if len(param) > 0 {
-			*script.Params = append(*script.Params, param)
-		}
 		statement := &Statement{
 			Index:  index,
 			Label:  label,
 			Text:   statementString,
+			Param:  param,
 			Script: script,
 		}
 		*script.Statements = append(*script.Statements, *statement)

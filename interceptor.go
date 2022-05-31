@@ -13,7 +13,6 @@ type Interceptor interface {
 	BeforeEach(tx *sql.Tx, context map[string]any, statement *Statement, cumulativeResults map[string]any) (bool, error)
 	AfterEach(tx *sql.Tx, context map[string]any, statement *Statement, result any, cumulativeResults map[string]any) error
 	After(tx *sql.Tx, context map[string]any, results *any, allResults any) error
-	OnError(err *error) error
 }
 
 type DefaultInterceptor struct{}
@@ -32,10 +31,6 @@ func (this *DefaultInterceptor) BeforeEach(tx *sql.Tx, context map[string]any, s
 
 func (this *DefaultInterceptor) AfterEach(tx *sql.Tx, context map[string]any, statement *Statement, result any, cumulativeResults map[string]any) error {
 	return nil
-}
-
-func (this *DefaultInterceptor) OnError(err *error) error {
-	return *err
 }
 
 func (this *App) RegisterGlobalInterceptors(is ...Interceptor) {
