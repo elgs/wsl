@@ -48,7 +48,7 @@ func (this *AuthInterceptor) getSession(tx *sql.Tx, sessionId string) (map[strin
 	if len(dbResult) != 1 {
 		return nil, errors.New("session_not_found")
 	}
-	Sessions[sessionId] = wsl.ConvertMap[string, any](dbResult[0]).Data
+	Sessions[sessionId], err = wsl.ConvertMap[string, any](dbResult[0])
 	if err != nil {
 		return nil, err
 	}

@@ -24,7 +24,7 @@ func (this *ForgetPasswordSendCodeInterceptor) Before(tx *sql.Tx, context map[st
 	return nil
 }
 
-func (this *ForgetPasswordSendCodeInterceptor) BeforeEach(tx *sql.Tx, context map[string]any, script *string, sqlParams *[]any, scriptIndex int, scriptLabel string, cumulativeResults map[string]any) (bool, error) {
+func (this *ForgetPasswordSendCodeInterceptor) BeforeEach(tx *sql.Tx, context map[string]any, statement *wsl.Statement, cumulativeResults map[string]any) (bool, error) {
 
 	if skipAll, ok := context["skip_all"].(bool); ok && skipAll {
 		return true, nil
@@ -33,9 +33,9 @@ func (this *ForgetPasswordSendCodeInterceptor) BeforeEach(tx *sql.Tx, context ma
 	return false, nil
 }
 
-func (this *ForgetPasswordSendCodeInterceptor) AfterEach(tx *sql.Tx, context map[string]any, scriptIndex int, scriptLabel string, result any, cumulativeResults map[string]any) error {
+func (this *ForgetPasswordSendCodeInterceptor) AfterEach(tx *sql.Tx, context map[string]any, statement *wsl.Statement, result any, cumulativeResults map[string]any) error {
 
-	if scriptLabel == "get_uid_email" {
+	if statement.Label == "get_uid_email" {
 		if results, ok := result.([]map[string]string); ok && len(results) == 1 {
 			email := results[0]["email"]
 			userFlagCode := context["forget_password"]

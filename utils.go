@@ -5,11 +5,9 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
-
-	"github.com/elgs/optional"
 )
 
-func extractScriptParams(scriptArray *[]string) *optional.Optional[*[]string] {
+func extractScriptParams(scriptArray *[]string) (*[]string, error) {
 	ret := []string{}
 	for _, script := range *scriptArray {
 		_ = script
@@ -19,7 +17,7 @@ func extractScriptParams(scriptArray *[]string) *optional.Optional[*[]string] {
 			ret = append(ret, key)
 		}
 	}
-	return optional.New(&ret, nil)
+	return &ret, nil
 }
 
 func ExtractScriptParamsFromMap(m map[string]any) map[string]any {
@@ -118,29 +116,29 @@ func IsQuery(sql string) bool {
 	return false
 }
 
-func ConvertArray[T any, U any](arrayOfInterfaces []T) *optional.Optional[*[]U] {
+func ConvertArray[T any, U any](arrayOfInterfaces []T) (*[]U, error) {
 	ret := []U{}
 	for _, v := range arrayOfInterfaces {
 		if s, ok := any(v).(U); ok {
 			ret = append(ret, s)
 		} else {
-			return optional.New[*[]U](nil, errors.New("Failed to convert."))
+			return nil, errors.New("Failed to convert.")
 		}
 	}
-	return optional.New(&ret, nil)
+	return &ret, nil
 }
 
-func ConvertMap[T any, U any](data map[string]T) *optional.Optional[map[string]U] {
+func ConvertMap[T any, U any](data map[string]T) (map[string]U, error) {
 	if data == nil {
-		return optional.New[map[string]U](nil, errors.New("Cannot convert nil."))
+		return nil, errors.New("Cannot convert nil.")
 	}
 	ret := map[string]U{}
 	for k, v := range data {
 		if s, ok := any(v).(U); ok {
 			ret[k] = s
 		} else {
-			return optional.New[map[string]U](nil, errors.New("Failed to convert."))
+			return nil, errors.New("Failed to convert.")
 		}
 	}
-	return optional.New(ret, nil)
+	return ret, nil
 }

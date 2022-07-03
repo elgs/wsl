@@ -13,8 +13,6 @@ import (
 	"time"
 
 	"github.com/elgs/gosplitargs"
-	"github.com/elgs/optional"
-	"github.com/robfig/cron/v3"
 )
 
 type Statement struct {
@@ -42,11 +40,6 @@ type App struct {
 	// guaranteed to be executed in its list order on each query.
 	globalInterceptors []Interceptor
 
-	// jobs is the registry for cron jobs
-	Jobs map[string]*Job
-
-	Cron *cron.Cron
-
 	Scripts map[string]*Script
 }
 
@@ -55,8 +48,6 @@ func NewApp(config *Config) *App {
 		Config:    config,
 		Scripts:   map[string]*Script{},
 		Databases: map[string]*sql.DB{},
-		Jobs:      map[string]*Job{},
-		Cron:      cron.New(),
 	}
 }
 
@@ -73,10 +64,10 @@ func (this *App) GetDB(dbName string) *sql.DB {
 	return db
 }
 
-func BuildScript(scriptString string) *optional.Optional[*Script] {
+func BuildScript(scriptString string) (*Script, error) {
 	statements, err := gosplitargs.SplitArgs(scriptString, ";", true)
 	if err != nil {
-		return optional.New[*Script](nil, err)
+		return nil, err
 	}
 
 	script := &Script{
@@ -96,41 +87,30 @@ func BuildScript(scriptString string) *optional.Optional[*Script] {
 		}
 		*script.Statements = append(*script.Statements, *statement)
 	}
-	return optional.New(script, nil)
+	return script, nil
 }
 
-func (this *App) GetScript(scriptName string, forceReload bool) *optional.Optional[*Script] {
+func (this *App) GetScript(scriptName string, forceReload bool) (*Script, error) {
 	if script, ok := this.Scripts[scriptName]; ok {
-		return optional.New(script, nil)
+		return script, nil
 	}
 
 	data, err := ioutil.ReadFile(path.Join("scripts", scriptName, ".sql"))
 	if err != nil {
-		return optional.New[*Script](nil, err)
+		return nil, err
 	}
 	scriptString := string(data)
-	scriptOpt := BuildScript(scriptString)
-	if scriptOpt.Error != nil {
-		return scriptOpt
+	script, err := BuildScript(scriptString)
+	if err != nil {
+		return nil, err
 	}
 
-	scriptOpt.Data.ID = scriptName
-	this.Scripts[scriptName] = scriptOpt.Data
-	return scriptOpt
+	script.ID = scriptName
+	this.Scripts[scriptName] = script
+	return script, nil
 }
 
 func (this *App) Start() {
-	for _, b := range this.Jobs {
-		entryId, err := this.Cron.AddFunc(b.Cron, b.MakeFunc(this))
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		b.ID = &entryId
-	}
-
-	this.Cron.Start()
-
 	http.HandleFunc("/", this.defaultHandler)
 
 	if this.Config.Web.HttpAddr != "" {

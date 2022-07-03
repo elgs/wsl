@@ -2,9 +2,9 @@ package interceptors
 
 import (
 	"database/sql"
+	"errors"
 
 	"github.com/elgs/wsl"
-	"github.com/pkg/errors"
 )
 
 type LoginInterceptor struct {
@@ -22,9 +22,9 @@ func (this *LoginInterceptor) Before(tx *sql.Tx, context map[string]any) error {
 	return nil
 }
 
-func (this *LoginInterceptor) AfterEach(tx *sql.Tx, context map[string]any, scriptIndex int, scriptLabel string, result any, cumulativeResults map[string]any) error {
+func (this *LoginInterceptor) AfterEach(tx *sql.Tx, context map[string]any, statement *wsl.Statement, result any, cumulativeResults map[string]any) error {
 
-	if scriptLabel == "select_session" {
+	if statement.Label == "select_session" {
 		if val, ok := result.([]map[string]string); ok && len(val) == 1 {
 			context["session_id"] = val[0]["session_id"]
 			email := val[0]["email"]

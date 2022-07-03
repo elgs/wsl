@@ -34,10 +34,10 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	queryId := urlPath[1]
-	scriptOpt := this.GetScript(queryId, os.Getenv("env") == "dev")
-	if scriptOpt.Error != nil {
+	script, err := this.GetScript(queryId, os.Getenv("env") == "dev")
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, fmt.Sprint(`{"err":"`, scriptOpt.Error, `"}`))
+		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
 		return
 	}
 
@@ -88,7 +88,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	if authHeader != "" {
 		context["access_token"] = authHeader
 	}
-	result, err := this.exec(this.GetDB("main"), scriptOpt.Data, params, context)
+	result, err := this.exec(this.GetDB("main"), script, params, context)
 	if err != nil {
 		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
 		log.Println(err)
