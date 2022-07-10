@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"strings"
 	"syscall"
 	"time"
 
@@ -33,14 +34,10 @@ type Script struct {
 }
 
 type App struct {
-	Config    *Config
-	Databases map[string]*sql.DB
-
-	// globalInterceptors is the registry of a list of Interceptors that is
-	// guaranteed to be executed in its list order on each query.
+	Config             *Config
+	Databases          map[string]*sql.DB
 	globalInterceptors []Interceptor
-
-	Scripts map[string]*Script
+	Scripts            map[string]*Script
 }
 
 func NewApp(config *Config) *App {
@@ -76,14 +73,19 @@ func BuildScript(scriptString string) (*Script, error) {
 		Interceptors: &[]Interceptor{},
 	}
 	for index, statementString := range statements {
+		if len(strings.TrimSpace(statementString)) == 0 {
+			continue
+		}
 		label, statementSQL := SplitSqlLable(statementString)
 		param := ExtractSQLParameter(statementSQL)
 		statement := &Statement{
-			Index:  index,
-			Label:  label,
-			Text:   statementString,
-			Param:  param,
-			Script: script,
+			Index:        index,
+			Label:        label,
+			Text:         statementString,
+			Param:        param,
+			Script:       script,
+			IsQuery:      IsQuery(statementSQL),
+			ShouldExport: ShouldExport(statementSQL),
 		}
 		*script.Statements = append(*script.Statements, *statement)
 	}

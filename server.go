@@ -29,7 +29,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	urlPath := strings.Split(r.URL.Path, "/")
 	if len(urlPath) < 2 {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, fmt.Sprint(`{"err":"invalid_url"}`))
+		fmt.Fprint(w, fmt.Sprintf(`{"err":"invalid url %v"}`, r.URL.Path))
 		return
 	}
 

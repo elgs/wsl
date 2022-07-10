@@ -1,6 +1,10 @@
 package scripts
 
-import "github.com/elgs/wsl"
+import (
+	"log"
+
+	"github.com/elgs/wsl"
+)
 
 func LoadBuiltInScripts(app *wsl.App) {
 	// app.Scripts["init"] = Init
@@ -12,4 +16,9 @@ func LoadBuiltInScripts(app *wsl.App) {
 	// app.Scripts["reset-password"] = ResetPassword
 	// app.Scripts["forget-password-send-code"] = ForgetPasswordSendCode
 	// app.Scripts["forget-password-reset-password"] = ForgetPasswordResetPassword
+	test, err := wsl.BuildScript(Test)
+	if err != nil {
+		log.Fatal(err)
+	}
+	app.Scripts["test"] = test
 }
