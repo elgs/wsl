@@ -97,7 +97,8 @@ func (this *App) GetScript(scriptName string, forceReload bool) (*Script, error)
 		return script, nil
 	}
 
-	data, err := ioutil.ReadFile(path.Join("scripts", scriptName, ".sql"))
+	scriptPath := path.Join("scripts", scriptName+".sql")
+	data, err := ioutil.ReadFile(scriptPath)
 	if err != nil {
 		return nil, err
 	}
