@@ -34,17 +34,18 @@ type Script struct {
 }
 
 type App struct {
-	Config             *Config
-	Databases          map[string]*sql.DB
-	globalInterceptors []Interceptor
-	Scripts            map[string]*Script
+	Config       *Config
+	Databases    map[string]*sql.DB
+	Scripts      map[string]*Script
+	Interceptors *[]Interceptor
 }
 
 func NewApp(config *Config) *App {
 	return &App{
-		Config:    config,
-		Scripts:   map[string]*Script{},
-		Databases: map[string]*sql.DB{},
+		Config:       config,
+		Databases:    map[string]*sql.DB{},
+		Scripts:      map[string]*Script{},
+		Interceptors: &[]Interceptor{},
 	}
 }
 

@@ -35,6 +35,6 @@ func (this *DefaultInterceptor) AfterEach(tx *sql.Tx, context map[string]any, st
 
 func (this *App) RegisterGlobalInterceptors(is ...Interceptor) {
 	for _, i := range is {
-		this.globalInterceptors = append(this.globalInterceptors, i)
+		*this.Interceptors = append(*this.Interceptors, i)
 	}
 }

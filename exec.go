@@ -23,7 +23,7 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 		return nil, err
 	}
 
-	for _, gi := range this.globalInterceptors {
+	for _, gi := range *this.Interceptors {
 		err := gi.Before(tx, context)
 		if err != nil {
 			tx.Rollback()
@@ -145,7 +145,7 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 		}
 	}
 
-	for _, gi := range this.globalInterceptors {
+	for _, gi := range *this.Interceptors {
 		err := gi.After(tx, context, exportedResults, cumulativeResults)
 		if err != nil {
 			tx.Rollback()
