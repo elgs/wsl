@@ -17,3 +17,18 @@ func TestExtractSQLParameter(t *testing.T) {
 		}
 	}
 }
+
+func TestSplitSqlLable(t *testing.T) {
+	testCases := map[string]string{
+		"-- @label:insert":    "insert",
+		" --@label: insert ":  "insert",
+		" --@label : insert ": "insert",
+	}
+
+	for k, v := range testCases {
+		label, _ := SplitSqlLable(k)
+		if label != v {
+			t.Errorf(`%s; wanted "%s", got "%s"`, k, v, label)
+		}
+	}
+}

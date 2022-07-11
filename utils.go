@@ -85,19 +85,17 @@ func ExtractSQLParameter(statement string) string {
 	return ""
 }
 
-func SplitSqlLable(sql string) (label string, s string) {
-	sql = strings.TrimSpace(sql)
-	if strings.HasPrefix(sql, "#") {
-		ss := strings.Fields(sql)
-		lenSS := len(ss)
-		if lenSS == 0 {
-			return "", ""
-		} else if lenSS == 1 {
-			return ss[0][1:], ""
-		}
-		return ss[0][1:], strings.TrimSpace(sql[len(ss[0]):])
+func SplitSqlLable(sqlString string) (label string, s string) {
+	sqlString = strings.TrimSpace(sqlString) + "\n"
+	labelAndSql := strings.SplitN(sqlString, "\n", 2)
+	labelPart := labelAndSql[0]
+	sqlPart := labelAndSql[1]
+	r := regexp.MustCompile(`(?i)\s*\-\-\s*@label\s*\:\s*(.+)\s*`)
+	m := r.FindStringSubmatch(labelPart)
+	if len(m) >= 2 {
+		return strings.TrimSpace(m[1]), sqlPart
 	}
-	return "", sql
+	return "", sqlString
 }
 
 func sqlSafe(s *string) {
