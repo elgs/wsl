@@ -3,6 +3,7 @@ package wsl
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/elgs/gosqljson"
 )
@@ -23,7 +24,7 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 		return nil, err
 	}
 
-	for _, gi := range *this.Interceptors {
+	for _, gi := range *this.GlobalInterceptors {
 		err := gi.Before(tx, context)
 		if err != nil {
 			tx.Rollback()
@@ -56,10 +57,10 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 		SqlNormalize(&statement.Text)
 
 		// double underscore
-		// scriptParams := ExtractScriptParamsFromMap(params)
-		// for k, v := range scriptParams {
-		// 	script = strings.Replace(script, k, v.(string), -1)
-		// }
+		scriptParams := ExtractScriptParamsFromMap(params)
+		for k, v := range scriptParams {
+			statement.Text = strings.Replace(statement.Text, k, v.(string), -1)
+		}
 
 		sqlParams := []any{}
 		if statement.Param != "" {
@@ -145,7 +146,7 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 		}
 	}
 
-	for _, gi := range *this.Interceptors {
+	for _, gi := range *this.GlobalInterceptors {
 		err := gi.After(tx, context, exportedResults, cumulativeResults)
 		if err != nil {
 			tx.Rollback()

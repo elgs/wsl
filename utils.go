@@ -85,7 +85,7 @@ func ExtractSQLParameter(statement string) string {
 	return ""
 }
 
-func SplitSqlLable(sqlString string) (label string, s string) {
+func SplitSqlLabel(sqlString string) (label string, s string) {
 	sqlString = strings.TrimSpace(sqlString) + "\n"
 	labelAndSql := strings.SplitN(sqlString, "\n", 2)
 	labelPart := labelAndSql[0]

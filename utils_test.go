@@ -18,7 +18,7 @@ func TestExtractSQLParameter(t *testing.T) {
 	}
 }
 
-func TestSplitSqlLable(t *testing.T) {
+func TestSplitSqlLabel(t *testing.T) {
 	testCases := map[string]string{
 		"-- @label:insert":    "insert",
 		" --@label: insert ":  "insert",
@@ -26,7 +26,7 @@ func TestSplitSqlLable(t *testing.T) {
 	}
 
 	for k, v := range testCases {
-		label, _ := SplitSqlLable(k)
+		label, _ := SplitSqlLabel(k)
 		if label != v {
 			t.Errorf(`%s; wanted "%s", got "%s"`, k, v, label)
 		}

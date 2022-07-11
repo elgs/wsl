@@ -35,6 +35,16 @@ func (this *DefaultInterceptor) AfterEach(tx *sql.Tx, context map[string]any, st
 
 func (this *App) RegisterGlobalInterceptors(is ...Interceptor) {
 	for _, i := range is {
-		*this.Interceptors = append(*this.Interceptors, i)
+		*this.GlobalInterceptors = append(*this.GlobalInterceptors, i)
+	}
+}
+
+func (this *App) RegisterScriptInterceptors(scriptId string, is ...Interceptor) {
+	interceptors := this.Interceptors[scriptId]
+	if interceptors == nil {
+		this.Interceptors[scriptId] = &[]Interceptor{}
+	}
+	for _, i := range is {
+		*this.Interceptors[scriptId] = append(*this.Interceptors[scriptId], i)
 	}
 }

@@ -34,18 +34,20 @@ type Script struct {
 }
 
 type App struct {
-	Config       *Config
-	Databases    map[string]*sql.DB
-	Scripts      map[string]*Script
-	Interceptors *[]Interceptor
+	Config             *Config
+	Databases          map[string]*sql.DB
+	Scripts            map[string]*Script
+	Interceptors       map[string]*[]Interceptor
+	GlobalInterceptors *[]Interceptor
 }
 
 func NewApp(config *Config) *App {
 	return &App{
-		Config:       config,
-		Databases:    map[string]*sql.DB{},
-		Scripts:      map[string]*Script{},
-		Interceptors: &[]Interceptor{},
+		Config:             config,
+		Databases:          map[string]*sql.DB{},
+		Scripts:            map[string]*Script{},
+		Interceptors:       map[string]*[]Interceptor{},
+		GlobalInterceptors: &[]Interceptor{},
 	}
 }
 
@@ -62,22 +64,24 @@ func (this *App) GetDB(dbName string) *sql.DB {
 	return db
 }
 
-func BuildScript(scriptString string) (*Script, error) {
+func (this *App) BuildScript(scriptString string, scriptId string) (*Script, error) {
 	statements, err := gosplitargs.SplitArgs(scriptString, ";", true)
 	if err != nil {
 		return nil, err
 	}
 
 	script := &Script{
+		ID:           scriptId,
 		Text:         scriptString,
 		Statements:   &[]Statement{},
-		Interceptors: &[]Interceptor{},
+		Interceptors: this.Interceptors[scriptId],
 	}
 	for index, statementString := range statements {
-		if len(strings.TrimSpace(statementString)) == 0 {
+		statementString = strings.TrimSpace(statementString)
+		if len(statementString) == 0 {
 			continue
 		}
-		label, statementSQL := SplitSqlLable(statementString)
+		label, statementSQL := SplitSqlLabel(statementString)
 		if label == "" {
 			label = fmt.Sprint(index)
 		}
@@ -85,7 +89,7 @@ func BuildScript(scriptString string) (*Script, error) {
 		statement := &Statement{
 			Index:        index,
 			Label:        label,
-			Text:         strings.TrimSpace(statementString),
+			Text:         statementString,
 			Param:        param,
 			Script:       script,
 			IsQuery:      IsQuery(statementSQL),
@@ -96,24 +100,23 @@ func BuildScript(scriptString string) (*Script, error) {
 	return script, nil
 }
 
-func (this *App) GetScript(scriptName string, forceReload bool) (*Script, error) {
-	if script, ok := this.Scripts[scriptName]; ok {
+func (this *App) GetScript(scriptId string, forceReload bool) (*Script, error) {
+	if script, ok := this.Scripts[scriptId]; ok {
 		return script, nil
 	}
 
-	scriptPath := path.Join(scriptName + ".sql")
+	scriptPath := path.Join(scriptId + ".sql")
 	data, err := ioutil.ReadFile(scriptPath)
 	if err != nil {
 		return nil, err
 	}
 	scriptString := string(data)
-	script, err := BuildScript(scriptString)
+	script, err := this.BuildScript(scriptString, scriptId)
 	if err != nil {
 		return nil, err
 	}
 
-	script.ID = scriptName
-	this.Scripts[scriptName] = script
+	this.Scripts[scriptId] = script
 	return script, nil
 }
 
