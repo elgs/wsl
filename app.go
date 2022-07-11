@@ -84,7 +84,7 @@ func BuildScript(scriptString string) (*Script, error) {
 		statement := &Statement{
 			Index:        index,
 			Label:        label,
-			Text:         statementString,
+			Text:         strings.TrimSpace(statementString),
 			Param:        param,
 			Script:       script,
 			IsQuery:      IsQuery(statementSQL),

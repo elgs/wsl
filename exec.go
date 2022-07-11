@@ -49,18 +49,11 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 		theCase = v
 	}
 
-	// sqlParamsOpt := extractParamsFromMap(&scriptArray, params)
-	// if sqlParamsOpt.Error != nil {
-	// 	return nil, sqlParamsOpt.Error
-	// }
-	// sqlParams := &sqlParamsOpt.Data
-	// context["sqlParams"] = sqlParams
-
 	for _, statement := range *script.Statements {
-		// SqlNormalize(&script)
 		if len(statement.Text) == 0 {
 			continue
 		}
+		SqlNormalize(&statement.Text)
 
 		// double underscore
 		// scriptParams := ExtractScriptParamsFromMap(params)
@@ -131,7 +124,7 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 		}
 
 		for _, li := range *script.Interceptors {
-			err := li.AfterEach(tx, context, &statement, result, cumulativeResults)
+			err := li.AfterEach(tx, context, &statement, cumulativeResults, result)
 			if err != nil {
 				tx.Rollback()
 				return nil, err
@@ -139,13 +132,13 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 		}
 	}
 
-	var ret any = exportedResults
+	// var ret any = exportedResults
 	// if len(exportedResults) == 1 {
 	// 	ret = exportedResults[0]
 	// }
 
 	for _, li := range *script.Interceptors {
-		err := li.After(tx, context, &ret, cumulativeResults)
+		err := li.After(tx, context, exportedResults, cumulativeResults)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -153,7 +146,7 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 	}
 
 	for _, gi := range this.globalInterceptors {
-		err := gi.After(tx, context, &ret, cumulativeResults)
+		err := gi.After(tx, context, exportedResults, cumulativeResults)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -161,5 +154,5 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 	}
 
 	tx.Commit()
-	return ret, nil
+	return exportedResults, nil
 }

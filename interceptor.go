@@ -10,9 +10,9 @@ import (
 // the query, or convert the result to other formats.
 type Interceptor interface {
 	Before(tx *sql.Tx, context map[string]any) error
+	After(tx *sql.Tx, context map[string]any, exportedResults any, cumulativeResults any) error
 	BeforeEach(tx *sql.Tx, context map[string]any, statement *Statement, cumulativeResults map[string]any) (bool, error)
-	AfterEach(tx *sql.Tx, context map[string]any, statement *Statement, result any, cumulativeResults map[string]any) error
-	After(tx *sql.Tx, context map[string]any, results *any, allResults any) error
+	AfterEach(tx *sql.Tx, context map[string]any, statement *Statement, cumulativeResults map[string]any, result any) error
 }
 
 type DefaultInterceptor struct{}
@@ -21,7 +21,7 @@ func (this *DefaultInterceptor) Before(tx *sql.Tx, context map[string]any) error
 	return nil
 }
 
-func (this *DefaultInterceptor) After(tx *sql.Tx, context map[string]any, results *any, allResults any) error {
+func (this *DefaultInterceptor) After(tx *sql.Tx, context map[string]any, exportedResults any, cumulativeResults any) error {
 	return nil
 }
 
@@ -29,7 +29,7 @@ func (this *DefaultInterceptor) BeforeEach(tx *sql.Tx, context map[string]any, s
 	return false, nil
 }
 
-func (this *DefaultInterceptor) AfterEach(tx *sql.Tx, context map[string]any, statement *Statement, result any, cumulativeResults map[string]any) error {
+func (this *DefaultInterceptor) AfterEach(tx *sql.Tx, context map[string]any, statement *Statement, cumulativeResults map[string]any, result any) error {
 	return nil
 }
 
