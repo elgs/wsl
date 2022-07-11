@@ -77,6 +77,9 @@ func BuildScript(scriptString string) (*Script, error) {
 			continue
 		}
 		label, statementSQL := SplitSqlLable(statementString)
+		if label == "" {
+			label = fmt.Sprint(index)
+		}
 		param := ExtractSQLParameter(statementSQL)
 		statement := &Statement{
 			Index:        index,
@@ -97,7 +100,7 @@ func (this *App) GetScript(scriptName string, forceReload bool) (*Script, error)
 		return script, nil
 	}
 
-	scriptPath := path.Join("scripts", scriptName+".sql")
+	scriptPath := path.Join(scriptName + ".sql")
 	data, err := ioutil.ReadFile(scriptPath)
 	if err != nil {
 		return nil, err

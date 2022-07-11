@@ -26,15 +26,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	urlPath := strings.Split(r.URL.Path, "/")
-	if len(urlPath) < 2 {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, fmt.Sprintf(`{"err":"invalid url %v"}`, r.URL.Path))
-		return
-	}
-
-	queryId := urlPath[1]
-	script, err := this.GetScript(queryId, os.Getenv("env") == "dev")
+	script, err := this.GetScript(r.URL.Path[1:], os.Getenv("env") == "dev")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
