@@ -3,8 +3,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/elgs/gosplitargs v0.0.0-20161028071935-a491c5eeb3c8 h1:bD2/rCXwgXJm2vgoSSSCM9IPjVFfEoQFFblzg7HHABI=
 github.com/elgs/gosplitargs v0.0.0-20161028071935-a491c5eeb3c8/go.mod h1:o4DgpccPNAQAlPSxo7I4L/LWNh2oyr/BBGSynrLTmZM=
-github.com/elgs/gosqljson v0.0.0-20160403005647-027aa4915315 h1:0NXTHkloWMqOB1KHv1pZ/LAXsq9mhH0VsqyBu0MjB1Q=
-github.com/elgs/gosqljson v0.0.0-20160403005647-027aa4915315/go.mod h1:QhwWWjjii22wonb8HPfn6AkBRA95VpJ+xVqyhnCSbbU=
+github.com/elgs/gosqljson v0.0.0-20220712125658-2f85b34a6a73 h1:XVGQgQ4p7MjiSE4wkt8RilXOQ2CNYNx8cA+Mp4cPwew=
+github.com/elgs/gosqljson v0.0.0-20220712125658-2f85b34a6a73/go.mod h1:7Ujsfxy7682f5JnLTuFsQn7lbOV7q0Oscf9Mnwebltk=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

@@ -165,7 +165,5 @@ func Hook() {
 			}
 		}
 	}()
-
 	<-done
-	fmt.Println("Bye!")
 }

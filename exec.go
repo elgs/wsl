@@ -13,7 +13,6 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 	context["script"] = &script
 	context["params"] = params
 	context["app"] = this
-	params["case"] = "lower"
 
 	exportedResults := map[string]any{}
 	cumulativeResults := map[string]any{}
@@ -42,12 +41,8 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 
 	// log.Println(script)
 	format := ""
-	theCase := ""
 	if v, ok := params["format"].(string); ok {
 		format = v
-	}
-	if v, ok := params["case"].(string); ok {
-		theCase = v
 	}
 
 	for _, statement := range *script.Statements {
@@ -90,7 +85,7 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 
 		if statement.IsQuery {
 			if format == "array" {
-				header, data, err := gosqljson.QueryTxToArray(tx, theCase, statement.Text, sqlParams...)
+				header, data, err := gosqljson.QueryToArray(tx, gosqljson.Lower, statement.Text, sqlParams...)
 				data = append([][]string{header}, data...)
 				if err != nil {
 					tx.Rollback()
@@ -102,7 +97,7 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 				}
 				result = data
 			} else {
-				result, err = gosqljson.QueryTxToMap(tx, theCase, statement.Text, sqlParams...)
+				result, err = gosqljson.QueryToMap(tx, gosqljson.Lower, statement.Text, sqlParams...)
 				if err != nil {
 					tx.Rollback()
 					return nil, err
@@ -113,7 +108,7 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 				}
 			}
 		} else {
-			result, err = gosqljson.ExecTx(tx, statement.Text, sqlParams...)
+			result, err = gosqljson.Exec(tx, statement.Text, sqlParams...)
 			if err != nil {
 				tx.Rollback()
 				return nil, err
