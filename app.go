@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/elgs/gorediscache"
 	"github.com/elgs/gosplitargs"
 )
 
@@ -36,15 +37,18 @@ type Script struct {
 type App struct {
 	Config             *Config
 	Databases          map[string]*sql.DB
+	Cache              *gorediscache.Cache
 	Scripts            map[string]*Script
 	Interceptors       map[string]*[]Interceptor
 	GlobalInterceptors *[]Interceptor
 }
 
 func NewApp(config *Config) *App {
+
 	return &App{
 		Config:             config,
 		Databases:          map[string]*sql.DB{},
+		Cache:              gorediscache.NewCache(config.RedisURL),
 		Scripts:            map[string]*Script{},
 		Interceptors:       map[string]*[]Interceptor{},
 		GlobalInterceptors: &[]Interceptor{},

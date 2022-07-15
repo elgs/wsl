@@ -7,6 +7,7 @@ import (
 type Config struct {
 	Web       *Web                `json:"web"`
 	Databases map[string]Database `json:"databases"`
+	RedisURL  string              `json:"redis_url"`
 	Mail      *Mail               `json:"mail"`
 	Opt       map[string]any      `json:"opt"`
 }
