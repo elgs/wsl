@@ -48,7 +48,7 @@ func NewApp(config *Config) *App {
 	return &App{
 		Config:             config,
 		Databases:          map[string]*sql.DB{},
-		Cache:              gorediscache.NewCache(config.RedisURL),
+		Cache:              gorediscache.NewCache(config.RedisURL, 0),
 		Scripts:            map[string]*Script{},
 		Interceptors:       map[string]*[]Interceptor{},
 		GlobalInterceptors: &[]Interceptor{},
