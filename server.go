@@ -66,10 +66,6 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		params[k] = v
 	}
 
-	params["__client_ip"] = clientIP
-
-	context := map[string]any{}
-
 	authHeader := r.Header.Get("access_token")
 	if authHeader == "" && params["access_token"] != nil {
 		if token, ok := params["access_token"].(string); ok {
@@ -77,10 +73,16 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if authHeader != "" {
-		context["access_token"] = authHeader
+	context := &Context{
+		App:         this,
+		Script:      script,
+		AccessToken: authHeader,
+		ClientIP:    clientIP,
+		Params:      params,
+		Opt:         map[string]any{},
 	}
-	result, err := this.exec(this.GetDB("main"), script, params, context)
+
+	result, err := this.exec(context)
 	if err != nil {
 		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
 		log.Println(err)

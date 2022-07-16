@@ -29,8 +29,9 @@ type Statement struct {
 
 type Script struct {
 	ID           string
+	DBKey        string
 	Text         string
-	Statements   *[]Statement
+	Statements   *[]*Statement
 	Interceptors *[]Interceptor
 }
 
@@ -41,6 +42,15 @@ type App struct {
 	Scripts            map[string]*Script
 	Interceptors       map[string]*[]Interceptor
 	GlobalInterceptors *[]Interceptor
+}
+
+type Context struct {
+	App         *App
+	Script      *Script
+	AccessToken string
+	ClientIP    string
+	Params      map[string]any
+	Opt         map[string]any
 }
 
 func NewApp(config *Config) *App {
@@ -76,8 +86,9 @@ func (this *App) BuildScript(scriptString string, scriptId string) (*Script, err
 
 	script := &Script{
 		ID:           scriptId,
+		DBKey:        "main",
 		Text:         scriptString,
-		Statements:   &[]Statement{},
+		Statements:   &[]*Statement{},
 		Interceptors: this.Interceptors[scriptId],
 	}
 	for index, statementString := range statements {
@@ -99,7 +110,7 @@ func (this *App) BuildScript(scriptString string, scriptId string) (*Script, err
 			IsQuery:      IsQuery(statementSQL),
 			ShouldExport: ShouldExport(statementSQL),
 		}
-		*script.Statements = append(*script.Statements, *statement)
+		*script.Statements = append(*script.Statements, statement)
 	}
 	return script, nil
 }

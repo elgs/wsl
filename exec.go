@@ -1,18 +1,16 @@
 package wsl
 
 import (
-	"database/sql"
 	"fmt"
 	"strings"
 
 	"github.com/elgs/gosqljson"
 )
 
-func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context map[string]any) (any, error) {
+func (this *App) exec(context *Context) (any, error) {
 
-	context["script"] = &script
-	context["params"] = params
-	context["app"] = this
+	script := context.Script
+	db := this.GetDB(script.DBKey)
 
 	exportedResults := map[string]any{}
 	cumulativeResults := map[string]any{}
@@ -41,10 +39,11 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 
 	// log.Println(script)
 	format := ""
-	if v, ok := params["format"].(string); ok {
+	if v, ok := context.Params["format"].(string); ok {
 		format = v
 	}
 
+statement:
 	for _, statement := range *script.Statements {
 		if len(statement.Text) == 0 {
 			continue
@@ -52,14 +51,14 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 		SqlNormalize(&statement.Text)
 
 		// double underscore
-		scriptParams := ExtractScriptParamsFromMap(params)
+		scriptParams := ExtractScriptParamsFromMap(context.Params)
 		for k, v := range scriptParams {
 			statement.Text = strings.Replace(statement.Text, k, v.(string), -1)
 		}
 
 		sqlParams := []any{}
 		if statement.Param != "" {
-			if val, ok := params[statement.Param]; ok {
+			if val, ok := context.Params[statement.Param]; ok {
 				sqlParams = append(sqlParams, val)
 			} else {
 				tx.Rollback()
@@ -67,20 +66,15 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 			}
 		}
 
-		skipSql := false
 		for _, li := range *script.Interceptors {
-			skip, err := li.BeforeEach(tx, context, &statement, cumulativeResults)
+			skip, err := li.BeforeEach(tx, context, statement, cumulativeResults)
 			if err != nil {
 				tx.Rollback()
 				return nil, err
 			}
 			if skip {
-				skipSql = true
+				continue statement
 			}
-		}
-
-		if skipSql {
-			continue
 		}
 
 		if statement.IsQuery {
@@ -120,7 +114,7 @@ func (this *App) exec(db *sql.DB, script *Script, params map[string]any, context
 		}
 
 		for _, li := range *script.Interceptors {
-			err := li.AfterEach(tx, context, &statement, cumulativeResults, result)
+			err := li.AfterEach(tx, context, statement, cumulativeResults, result)
 			if err != nil {
 				tx.Rollback()
 				return nil, err
