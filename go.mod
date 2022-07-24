@@ -5,7 +5,7 @@ go 1.18
 replace github.com/elgs/gorediscache => ../gorediscache
 
 require (
-	github.com/elgs/gorediscache v0.0.0-20220715103921-4c862341613d
+	github.com/elgs/gorediscache v0.0.0-20220717011252-82d76361e241
 	github.com/elgs/gosplitargs v0.0.0-20161028071935-a491c5eeb3c8
 	github.com/elgs/gosqljson v0.0.0-20220712125658-2f85b34a6a73
 )

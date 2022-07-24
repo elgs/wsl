@@ -48,7 +48,9 @@ type Context struct {
 	App         *App
 	Script      *Script
 	AccessToken string
+	SessionID   string
 	ClientIP    string
+	Session     map[string]string
 	Params      map[string]any
 	Opt         map[string]any
 }
