@@ -51,6 +51,7 @@ type Context struct {
 	SessionID   string
 	ClientIP    string
 	Session     map[string]string
+	Flags       map[string]string
 	Params      map[string]any
 	Opt         map[string]any
 }
