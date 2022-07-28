@@ -4,11 +4,21 @@ import (
 	"database/sql"
 )
 
+type AuthLevel int
+
+const (
+	AuthFailed AuthLevel = iota
+	AuthNoToken
+	AuthUserAuthorized
+	AuthRootAuthorized
+)
+
 type Interceptor interface {
 	Before(tx *sql.Tx, context *Context) error
 	After(tx *sql.Tx, context *Context, exportedResults any, cumulativeResults any) error
 	BeforeEach(tx *sql.Tx, context *Context, statement *Statement, cumulativeResults map[string]any) (bool, error)
 	AfterEach(tx *sql.Tx, context *Context, statement *Statement, cumulativeResults map[string]any, result any) error
+	GetAuthLevel() AuthLevel
 }
 
 type DefaultInterceptor struct {
@@ -28,6 +38,10 @@ func (this *DefaultInterceptor) BeforeEach(tx *sql.Tx, context *Context, stateme
 
 func (this *DefaultInterceptor) AfterEach(tx *sql.Tx, context *Context, statement *Statement, cumulativeResults map[string]any, result any) error {
 	return nil
+}
+
+func (this *DefaultInterceptor) GetAuthLevel() AuthLevel {
+	return AuthNoToken
 }
 
 func (this *App) RegisterGlobalInterceptors(is ...Interceptor) {

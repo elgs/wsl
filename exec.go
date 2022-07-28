@@ -1,6 +1,7 @@
 package wsl
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -34,6 +35,9 @@ func (this *App) exec(context *Context) (any, error) {
 		if err != nil {
 			tx.Rollback()
 			return nil, err
+		}
+		if li.GetAuthLevel() > context.AuthLevel {
+			return nil, errors.New("Auth failed.")
 		}
 	}
 

@@ -48,6 +48,7 @@ type Context struct {
 	App         *App
 	Script      *Script
 	AccessToken string
+	AuthLevel   AuthLevel
 	SessionID   string
 	ClientIP    string
 	Session     map[string]string
@@ -57,7 +58,6 @@ type Context struct {
 }
 
 func NewApp(config *Config) *App {
-
 	return &App{
 		Config:             config,
 		Databases:          map[string]*sql.DB{},

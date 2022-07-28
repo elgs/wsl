@@ -29,7 +29,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	script, err := this.GetScript(r.URL.Path[1:], os.Getenv("env") == "dev")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
+		fmt.Fprint(w, fmt.Sprintf(`{"err":"%v"}`, err))
 		return
 	}
 
@@ -40,7 +40,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
+		fmt.Fprint(w, fmt.Sprintf(`{"err":"%v"}`, err))
 		log.Println(err)
 		return
 	}
@@ -48,7 +48,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &bodyData)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
+		fmt.Fprint(w, fmt.Sprintf(`{"err":"%v"}`, err))
 		log.Println(err)
 		return
 	}
@@ -56,7 +56,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	paramValues, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
+		fmt.Fprint(w, fmt.Sprintf(`{"err":"%v"}`, err))
 		log.Println(err)
 		return
 	}
@@ -84,14 +84,16 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 	result, err := this.exec(context)
 	if err != nil {
-		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, fmt.Sprintf(`{"err":"%v"}`, err))
 		log.Println(err)
 		return
 	}
 
 	jsonData, err := json.Marshal(result)
 	if err != nil {
-		fmt.Fprint(w, fmt.Sprint(`{"err":"`, err, `"}`))
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, fmt.Sprintf(`{"err":"%v"}`, err))
 		log.Println(err)
 		return
 	}
