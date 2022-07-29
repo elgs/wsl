@@ -49,7 +49,6 @@ type Context struct {
 	Script      *Script
 	AccessToken string
 	AuthLevel   AuthLevel
-	SessionID   string
 	ClientIP    string
 	Session     map[string]string
 	Flags       map[string]string
