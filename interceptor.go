@@ -46,16 +46,16 @@ func (this *DefaultInterceptor) GetAuthLevel() AuthLevel {
 
 func (this *App) RegisterGlobalInterceptors(is ...Interceptor) {
 	for _, i := range is {
-		*this.GlobalInterceptors = append(*this.GlobalInterceptors, i)
+		this.GlobalInterceptors = append(this.GlobalInterceptors, i)
 	}
 }
 
 func (this *App) RegisterScriptInterceptors(scriptID string, is ...Interceptor) {
 	interceptors := this.Interceptors[scriptID]
 	if interceptors == nil {
-		this.Interceptors[scriptID] = &[]Interceptor{}
+		this.Interceptors[scriptID] = []Interceptor{}
 	}
 	for _, i := range is {
-		*this.Interceptors[scriptID] = append(*this.Interceptors[scriptID], i)
+		this.Interceptors[scriptID] = append(this.Interceptors[scriptID], i)
 	}
 }

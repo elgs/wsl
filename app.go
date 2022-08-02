@@ -31,8 +31,8 @@ type Script struct {
 	ID           string
 	DBKey        string
 	Text         string
-	Statements   *[]*Statement
-	Interceptors *[]Interceptor
+	Statements   []*Statement
+	Interceptors []Interceptor
 }
 
 type App struct {
@@ -40,8 +40,8 @@ type App struct {
 	Databases          map[string]*sql.DB
 	Cache              *gorediscache.Cache
 	Scripts            map[string]*Script
-	Interceptors       map[string]*[]Interceptor
-	GlobalInterceptors *[]Interceptor
+	Interceptors       map[string][]Interceptor
+	GlobalInterceptors []Interceptor
 }
 
 type Context struct {
@@ -62,8 +62,8 @@ func NewApp(config *Config) *App {
 		Databases:          map[string]*sql.DB{},
 		Cache:              gorediscache.NewCache(config.RedisURL, 0),
 		Scripts:            map[string]*Script{},
-		Interceptors:       map[string]*[]Interceptor{},
-		GlobalInterceptors: &[]Interceptor{},
+		Interceptors:       map[string][]Interceptor{},
+		GlobalInterceptors: []Interceptor{},
 	}
 }
 
@@ -90,7 +90,7 @@ func (this *App) BuildScript(scriptString string, scriptId string) (*Script, err
 		ID:           scriptId,
 		DBKey:        "main",
 		Text:         scriptString,
-		Statements:   &[]*Statement{},
+		Statements:   []*Statement{},
 		Interceptors: this.Interceptors[scriptId],
 	}
 	for index, statementString := range statements {
@@ -112,7 +112,7 @@ func (this *App) BuildScript(scriptString string, scriptId string) (*Script, err
 			IsQuery:      IsQuery(statementSQL),
 			ShouldExport: ShouldExport(statementSQL),
 		}
-		*script.Statements = append(*script.Statements, statement)
+		script.Statements = append(script.Statements, statement)
 	}
 	return script, nil
 }
@@ -164,22 +164,21 @@ func (this *App) Start() {
 		}()
 	}
 
-	Hook()
+	Hook(nil)
 }
 
-func Hook() {
+func Hook(clean func()) {
 	sigs := make(chan os.Signal, 1)
 	done := make(chan bool, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		for {
-			select {
-			case sig := <-sigs:
-				fmt.Println(sig)
-				// cleanup code here
-				done <- true
+		select {
+		case <-sigs:
+			if clean != nil {
+				clean()
 			}
+			done <- true
 		}
 	}()
 	<-done

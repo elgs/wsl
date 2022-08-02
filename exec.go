@@ -22,7 +22,7 @@ func (this *App) exec(context *Context) (any, error) {
 		return nil, err
 	}
 
-	for _, gi := range *this.GlobalInterceptors {
+	for _, gi := range this.GlobalInterceptors {
 		err := gi.Before(tx, context)
 		if err != nil {
 			tx.Rollback()
@@ -30,7 +30,7 @@ func (this *App) exec(context *Context) (any, error) {
 		}
 	}
 
-	for _, li := range *script.Interceptors {
+	for _, li := range script.Interceptors {
 		err := li.Before(tx, context)
 		if err != nil {
 			tx.Rollback()
@@ -48,7 +48,7 @@ func (this *App) exec(context *Context) (any, error) {
 	}
 
 statement:
-	for _, statement := range *script.Statements {
+	for _, statement := range script.Statements {
 		if len(statement.Text) == 0 {
 			continue
 		}
@@ -70,7 +70,7 @@ statement:
 			}
 		}
 
-		for _, li := range *script.Interceptors {
+		for _, li := range script.Interceptors {
 			skip, err := li.BeforeEach(tx, context, statement, cumulativeResults)
 			if err != nil {
 				tx.Rollback()
@@ -117,7 +117,7 @@ statement:
 			}
 		}
 
-		for _, li := range *script.Interceptors {
+		for _, li := range script.Interceptors {
 			err := li.AfterEach(tx, context, statement, cumulativeResults, result)
 			if err != nil {
 				tx.Rollback()
@@ -131,7 +131,7 @@ statement:
 	// 	ret = exportedResults[0]
 	// }
 
-	for _, li := range *script.Interceptors {
+	for _, li := range script.Interceptors {
 		err := li.After(tx, context, exportedResults, cumulativeResults)
 		if err != nil {
 			tx.Rollback()
@@ -139,7 +139,7 @@ statement:
 		}
 	}
 
-	for _, gi := range *this.GlobalInterceptors {
+	for _, gi := range this.GlobalInterceptors {
 		err := gi.After(tx, context, exportedResults, cumulativeResults)
 		if err != nil {
 			tx.Rollback()

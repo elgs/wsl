@@ -17,7 +17,7 @@ func (this *App) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Methods", r.Header.Get("Access-Control-Request-Method"))
 		w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
-		w.Header().Set("Access-Control-Expose-Headers", "Token")
+		// w.Header().Set("Access-Control-Expose-Headers", "Token")
 	}
 
 	if r.Method == "OPTIONS" {
